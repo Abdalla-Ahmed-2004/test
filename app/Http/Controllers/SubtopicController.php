@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSubtopicRequest;
 use App\Http\Requests\UpdateSubtopicRequest;
+use App\Models\Lesson;
 use App\Models\Subject;
 use App\Models\Subtopic;
 
@@ -12,9 +13,9 @@ class SubtopicController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Subject $subject)
+    public function index(Lesson $lesson)
     {
-        return response()->json($subject->subtopics);
+        return response()->json($lesson->subtopics);
     }
 
     /**

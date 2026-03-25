@@ -193,13 +193,13 @@ For more details, refer to the official documentation of each package:
 Here’s a quick list of all commands:
 
 ```bash
-git clone https://github.com/ABDALLAPEPO/focus_platform.git
-cd focus_platform
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan jwt:secret
-php artisan migrate --seed
+git https://github.com/Abdalla-Ahmed-2004/focus_platform.git;
+cd focus_platform;
+composer install;
+cp .env.example .env;
+php artisan key:generate;
+php artisan jwt:secret;
+php artisan migrate --seed;
 # npm install
 # npm run dev
 php artisan serve

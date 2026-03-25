@@ -30,7 +30,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('subjects', [SubjectController::class, 'index']);
     Route::get('subjects/{subject}/units', [UnitController::class, 'index']);
     Route::get('units/{unit}/lessons', [LessonController::class, 'index']);
-    Route::get('lessons/{lesson}', [LessonController::class, 'show']);
+    Route::get('lesson/{lesson}/subtopics',[SubtopicController::class,'index']);
+    // Route::get('lessons/{lesson}', [LessonController::class, 'show']);
 
     // Teacher Content Management (already existed, scoped in controller)
     Route::apiResource('videos', VideoController::class)->middleware(['role:teacher']);
