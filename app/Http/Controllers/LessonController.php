@@ -13,7 +13,7 @@ class LessonController extends Controller
      */
     public function index(Unit $unit)
     {
-        return response()->json($unit->lessons);
+        return response()->json($unit->lessons()->paginate(10));
     }
 
     /**
@@ -24,8 +24,8 @@ class LessonController extends Controller
     {
         return response()->json([
             'lesson' => $lesson,
-            'videos' => $lesson->videos()->with('teacher:id,user_id')->get(),
-            'quizzes' => $lesson->quizzes()->with('teacher:id,user_id')->get(),
+            'videos' => $lesson->videos()->with('teacher:id,user_id')->paginate(10, ['*'], 'video_page'),
+            'quizzes' => $lesson->quizzes()->with('teacher:id,user_id')->paginate(10, ['*'], 'quiz_page'),
         ]);
     }
 }

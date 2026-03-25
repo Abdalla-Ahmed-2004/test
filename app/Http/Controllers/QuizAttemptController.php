@@ -14,19 +14,16 @@ class QuizAttemptController extends Controller
     public function index()
     {
         $student = JWTAuth::user()->student;
-        $cacheKey = 'quiz_attempts_student_'.$student->id;
+        $page = request()->get('page', 1);
+        $cacheKey = 'quiz_attempts_student_' . $student->id . '_page_' . $page;
 
-        // Paginated version
-        // $quizAttempts = cache()->remember($cacheKey, 1440, function () use ($student) {
-        //     return $student->quizzesAttempt()->paginate(10);
-        // });
-
-        // Non-paginated version
-        $quizAttempts = cache()->remember($cacheKey.'_all', 60, function () use ($student) {
-            return $student->quizzesAttempt;
+        $quizAttempts = cache()->remember($cacheKey, 60, function () use ($student) {
+            return $student->quizzesAttempt()->paginate(10);
         });
 
-        return ['quizzesAttempt' => new QuizAttemptCollection($quizAttempts)];
+        return response()->json([
+            'quizzesAttempt' => (new QuizAttemptCollection($quizAttempts))->response()->getData(true)
+        ]);
     }
     // /**
     //  * Start a new quiz attempt.

@@ -15,7 +15,7 @@ class SubtopicController extends Controller
      */
     public function index(Lesson $lesson)
     {
-        return response()->json($lesson->subtopics);
+        return response()->json($lesson->subtopics()->paginate(10));
     }
 
     /**

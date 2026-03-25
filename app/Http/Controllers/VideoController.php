@@ -19,19 +19,17 @@ class VideoController extends Controller
     public function index()
     {
         $teacher = JWTAuth::user()->teacher;
-        $cacheKey = 'videos_teacher_'.$teacher->id;
+        $page = request()->get('page', 1);
+        $cacheKey = 'videos_teacher_' . $teacher->id . '_page_' . $page;
 
-        // Paginated version
-        // $videos = cache()->remember($cacheKey, 1440, function () use ($teacher) {
-        //     return $teacher->videos()->paginate(10);
-        // });
-
-        // Non-paginated version
-        $videos = cache()->remember($cacheKey.'_all', 60, function () use ($teacher) {
-            return $teacher->videos;
+        $videos = cache()->remember($cacheKey, 60, function () use ($teacher) {
+            return $teacher->videos()->paginate(10);
         });
 
-        return ['teacher' => new teacherResource($teacher), 'videos' => new VideoCollection($videos)];
+        return response()->json([
+            'teacher' => new TeacherResource($teacher),
+            'videos' => (new VideoCollection($videos))->response()->getData(true)
+        ]);
     }
 
     /**
@@ -43,7 +41,7 @@ class VideoController extends Controller
         $teacher = JWTAuth::user()->teacher;
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            $path = $file->storeAs('videos', uniqid().'_'.$file->getClientOriginalName(), 'public');
+            $path = $file->storeAs('videos', uniqid() . '_' . $file->getClientOriginalName(), 'public');
             $video = Video::create([
                 'teacher_id' => $teacher->id,
                 'lesson_id' => $request->input('lesson_id'),

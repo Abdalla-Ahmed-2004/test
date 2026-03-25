@@ -73,9 +73,12 @@ class StudentAnswerController extends Controller
             'student_id' => $student->id,
             'score' => $score,
         ]);
-        $s_q_answers = StudentAnswer::where('quiz_id', $quiz->id)->where('student_id', $student->id)->get();
+        $s_q_answers = StudentAnswer::where('quiz_id', $quiz->id)->where('student_id', $student->id)->paginate(10);
 
-        return ['answers' => new StudentAnswerCollection($s_q_answers), 'score' => $score];
+        return response()->json([
+            'answers' => (new StudentAnswerCollection($s_q_answers))->response()->getData(true),
+            'score' => $score
+        ]);
     }
 
     public function answer(StoreStudentAnswerRequest $request, Quiz $quiz)

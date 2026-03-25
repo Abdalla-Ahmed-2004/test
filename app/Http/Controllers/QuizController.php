@@ -19,17 +19,11 @@ class QuizController extends Controller
     public function index()
     {
         $teacher = JWTAuth::user()->teacher;
-        // return $teacher;
-        $cacheKey = 'quizzes_teacher_'.$teacher->id;
+        $page = request()->get('page', 1);
+        $cacheKey = 'quizzes_teacher_' . $teacher->id . '_page_' . $page;
 
-        // Paginated version
-        // $quizzes = cache()->remember($cacheKey, 1440, function () use ($teacher) {
-        //     return $teacher->quizzes()->paginate(10);
-        // });
-
-        // Non-paginated version
-        $quizzes = cache()->remember($cacheKey.'_all', 60, function () use ($teacher) {
-            return $teacher->quizzes;
+        $quizzes = cache()->remember($cacheKey, 60, function () use ($teacher) {
+            return $teacher->quizzes()->paginate(10);
         });
 
         return ['quizzes' => $quizzes];
@@ -65,7 +59,7 @@ class QuizController extends Controller
             ]);
         }
 
-        return ['questions_of_quiz' => $quiz->questions];
+        return ['questions_of_quiz' => $quiz->questions()->paginate(10)];
     }
 
     /**
@@ -101,9 +95,11 @@ class QuizController extends Controller
      */
     public function getAllQuizzes()
     {
-        $quizzes = Quiz::all();
+        $quizzes = Quiz::paginate(10);
 
-        return response()->json(['quizzes' => QuizResource::collection($quizzes), 'count' => $quizzes->count()]);
+        return response()->json([
+            'quizzes' => QuizResource::collection($quizzes)->response()->getData(true)
+        ]);
     }
 
     /**

@@ -14,18 +14,12 @@ class SubjectController extends Controller
      */
     public function index()
     {
-        $cacheKey = 'subjects_all';
+        $page = request()->get('page', 1);
+        $cacheKey = 'subjects_all_page_' . $page;
 
-        // Paginated version
-        // $subjects = cache()->remember($cacheKey, 1440, function () {
-        //     return subject::paginate(10);
-        // });
-
-        // Non-paginated version
-        $subjects = cache()->remember($cacheKey.'_all', 60, function () {
-            return subject::all();
+        $subjects = cache()->remember($cacheKey, 60, function () {
+            return Subject::paginate(10);
         });
-
         return response()->json($subjects);
     }
 

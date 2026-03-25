@@ -12,6 +12,6 @@ class UnitController extends Controller
      */
     public function index(Subject $subject)
     {
-        return response()->json($subject->units);
+        return response()->json($subject->units()->paginate(10));
     }
 }

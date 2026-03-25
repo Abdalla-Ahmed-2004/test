@@ -27,19 +27,17 @@ class TeacherController extends Controller
      */
     public function index(Subject $subject)
     {
-        $cacheKey = 'teachers_subject_'.$subject->id;
+        $page = request()->get('page', 1);
+        $cacheKey = 'teachers_subject_' . $subject->id . '_page_' . $page;
 
-        // Paginated version
-        // $teachers = cache()->remember($cacheKey, 1440, function () use ($subject) {
-        //     return $subject->teachers()->paginate(10);
-        // });
-
-        // Non-paginated version
-        $teachers = cache()->remember($cacheKey.'_all', 60, function () use ($subject) {
-            return new TeacherCollection($subject->teachers);
+        $teachers = cache()->remember($cacheKey, 60, function () use ($subject) {
+            return $subject->teachers()->paginate(10);
         });
 
-        return ['teachers' => $teachers];
+        // Use response()->json() with custom data structure while preserving pagination via getData(true)
+        return response()->json([
+            'teachers' => (new TeacherCollection($teachers))->response()->getData(true)
+        ]);
     }
 
     /**
@@ -55,23 +53,25 @@ class TeacherController extends Controller
      */
     public function show(Teacher $teacher)
     {
-        // return (new teacherResource($teacher))->additional([ 'videos'=> new videoCollection($teacher->videos)]);
-        // return ['teacher' => new TeacherResource($teacher), 'lessons' => $teacher->videos()->with('lesson:id,title')->get()->pluck('lesson')];
-        return ['teacher' => new teacherResource($teacher), 'lessons' => $teacher->lessons()->select('lessons.id', 'lessons.title')->distinct()->get()->makeHidden('laravel_through_key')];
-        // return ['teacher' => new teacherResource($teacher), 'lessons' => $teacher->lessons->makeHidden('laravel_through_key')];
-        // return (new teacherResource($teacher))->additional([ 'lessons'=> $teacher->videos->load('lesson:id,title')->pluck('lesson')]);
+        $lessons = $teacher->lessons()
+            ->select('lessons.id', 'lessons.title')
+            ->distinct()
+            ->paginate(10)
+            ->through(function ($lesson) {
+                return $lesson->makeHidden('laravel_through_key');
+            });
+
+        return ['teacher' => new TeacherResource($teacher), 'lessons' => $lessons];
     }
 
     public function showContent(Teacher $teacher, Lesson $lesson)
     {
-        // return $teacher->videos()->where('lesson_id', $lesson->id)->get();
-        $videos = $teacher->videos()->where('lesson_id', $lesson->id)->get();
+        $videos = $teacher->videos()->where('lesson_id', $lesson->id)->paginate(10);
 
-        // $teacher->where("name", "like","d");
-        // $teacher->orderBy('score * id');
-        return ['teacher' => new TeacherResource($teacher), 'videos' => new VideoCollection($videos)];
-        // return (new teacherResource($teacher))->additional([ 'videos'=> new videoCollection($teacher->videos)]);
-        // return (new teacherResource($teacher))->additional([ 'lessons'=> $teacher->videos->load('lesson:id,title')->pluck('lesson')]);
+        return response()->json([
+            'teacher' => new TeacherResource($teacher),
+            'videos' => (new VideoCollection($videos))->response()->getData(true)
+        ]);
     }
 
     public function showQuiz(Quiz $quiz)
