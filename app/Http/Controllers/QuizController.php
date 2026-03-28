@@ -54,7 +54,7 @@ class QuizController extends Controller
                 'option_3' => $qData['option'][2] ?? null,
                 'option_4' => $qData['option'][3] ?? null,
                 'correct_answer' => $qData['correct_answer'],
-                'difficulty' => $qData['difficulty'] ?? 1,
+                'difficulty' => $qData['difficulty'] ?? null,
                 'cognitive_skill' => $qData['cognitive_skill'] ?? null,
             ]);
         }

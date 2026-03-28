@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('option_3');
             $table->string('option_4');
             $table->string('correct_answer');
+            $table->string('difficulty')->nullable();
+            $table->string('cognitive_skill')->nullable();
             $table->timestamps();
         });
     }
