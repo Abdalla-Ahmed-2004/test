@@ -18,13 +18,23 @@ class StudentAnswerFactory extends Factory
      */
     public function definition(): array
     {
-        // Pick a random question first, then derive quiz_id from it
-        $question = Question::inRandomOrder()->first();
-
         return [
-            'quiz_id' => $question->quiz_id,
-            'student_id' => Student::inRandomOrder()->value('id'),
-            'question_id' => $question->id,
+            'quiz_id' => function () {
+                // Ensure we get a quiz attempt to link to a valid student/quiz combo
+                return \App\Models\QuizAttempt::inRandomOrder()->value('quiz_id') ?? \App\Models\QuizAttempt::factory()->create()->quiz_id;
+            },
+            'student_id' => function (array $attributes) {
+                // Return the student_id that corresponds to this exact attempt on this quiz
+                return \App\Models\QuizAttempt::where('quiz_id', $attributes['quiz_id'])->inRandomOrder()->value('student_id');
+            },
+            'question_id' => function (array $attributes) {
+                // Return a question that belongs to the same quiz
+                $question = \App\Models\Question::where('quiz_id', $attributes['quiz_id'])->inRandomOrder()->first();
+                if (!$question) {
+                    $question = \App\Models\Question::factory()->create(['quiz_id' => $attributes['quiz_id']]);
+                }
+                return $question->id;
+            },
             'answer_text' => $this->faker->sentence(),
             'correctness' => $this->faker->boolean(),
         ];

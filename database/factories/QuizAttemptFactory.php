@@ -19,8 +19,12 @@ class QuizAttemptFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_id' => Student::inRandomOrder()->value('id'),
-            'quiz_id' => Quiz::inRandomOrder()->value('id'),
+            'student_id' => function () {
+                return Student::inRandomOrder()->value('id') ?? Student::factory()->create()->id;
+            },
+            'quiz_id' => function () {
+                return Quiz::inRandomOrder()->value('id') ?? Quiz::factory()->create()->id;
+            },
             'score' => $this->faker->numberBetween(0, 100),
         ];
     }

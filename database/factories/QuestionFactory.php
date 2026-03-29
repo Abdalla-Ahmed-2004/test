@@ -18,29 +18,36 @@ class QuestionFactory extends Factory
      */
     public function definition(): array
     {
-        $quiz = Quiz::inRandomOrder()->first();
-
-        // Scope subtopic to the quiz's lesson
-        $subtopicId = Subtopic::where('lesson_id', $quiz->lesson_id)
-            ->inRandomOrder()
-            ->value('id');
-
-        $options = [
-            $this->faker->word(),
-            $this->faker->word(),
-            $this->faker->word(),
-            $this->faker->word(),
-        ];
-
         return [
-            'quiz_id' => $quiz->id,
-            'subtopic_id' => $subtopicId,
+            'quiz_id' => function () {
+                // Get a quiz that belongs to a lesson with subtopics
+                return Quiz::whereHas('lesson.subtopics')->inRandomOrder()->value('id') ?? Quiz::factory()->create()->id;
+            },
+            'subtopic_id' => function (array $attributes) {
+                // Scope subtopic to the quiz's lesson
+                $quiz = Quiz::find($attributes['quiz_id']);
+                $subtopic = Subtopic::where('lesson_id', $quiz->lesson_id)->inRandomOrder()->first();
+
+                if (!$subtopic) {
+                    // Fallback just in case
+                    $subtopic = Subtopic::factory()->create(['lesson_id' => $quiz->lesson_id]);
+                }
+                return $subtopic->id;
+            },
             'question' => $this->faker->sentence(),
-            'option_1' => $options[0],
-            'option_2' => $options[1],
-            'option_3' => $options[2],
-            'option_4' => $options[3],
-            'correct_answer' => $this->faker->randomElement($options),
+            'option_1' => $this->faker->word(),
+            'option_2' => $this->faker->word(),
+            'option_3' => $this->faker->word(),
+            'option_4' => $this->faker->word(),
+            'correct_answer' => function (array $attributes) {
+                // Pick one of the generated options
+                return $this->faker->randomElement([
+                    $attributes['option_1'],
+                    $attributes['option_2'],
+                    $attributes['option_3'],
+                    $attributes['option_4']
+                ]);
+            },
         ];
     }
 }
