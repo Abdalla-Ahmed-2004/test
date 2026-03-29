@@ -15,35 +15,40 @@ class VideoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // dd(auth('api')->user());
-        if (auth('api')->user()&& auth('api')->user()->hasRole('student')) {
-            // dd("hello");
-                $student = auth('api')->user()->student;
-                $quizzes = $this->quizzes;
-                $quiz_attempted = [];
-                foreach ($quizzes as $quiz) {
-                    if ($student->quizzesAttempt()->where('quiz_id', $quiz->id)->exists()) {
-                        $quiz_attempted['quiz_' . $quiz->id] = ["quiz_id"=>$quiz->id,"attempted"=>true, "score"=>$student->quizzesAttempt()->where('quiz_id', $quiz->id)->first()->score];
-                    } else {
-                        $quiz_attempted['quiz_' . $quiz->id] = ["quiz_id"=>$quiz->id,"attempted"=>false, "score"=>null];
-                    }
-                }
-                return [
-                    'lesson_id' => $this->lesson->id,
-                    'lesson_title' => $this->lesson->title,
-                    'video_id' => $this->id,
-                    'video_title' => $this->title,
-                    'video_url' => $this->url,
-                    'created_at' => $this->created_at->format('Y-m-d h:i:s'),
-                    // 'quizzes'=>new quizCollection($this->quizzes)
-                    'quizzes_count' => $this->quizzes->count(),
-                    // 'quizzes' => $this->quizzes->pluck('id')->toArray(),
-                    
-                    "quiz_attempted" => $quiz_attempted,
-                ];
-            
+        // dd(JWTAuth::getToken());
+        $user = null;
+        try {
+            if ($token = JWTAuth::getToken()) {
+                $user = JWTAuth::toUser($token);
+            }
+        } catch (\Exception $e) {
+            // Ignore token errors for unauthenticated routes
         }
 
+        if ($user && $user->hasRole('student')) {
+            // dd("hello");
+            $student = $user->student;
+            $quizzes = $this->quizzes;
+            $quiz_attempted = [];
+            foreach ($quizzes as $quiz) {
+                $attempt = $student->quizzesAttempt()->where('quiz_id', $quiz->id)->first();
+                if ($attempt) {
+                    $quiz_attempted[] = ["quiz_id" => $quiz->id, "attempted" => true, "score" => $attempt->score];
+                } else {
+                    $quiz_attempted[] = ["quiz_id" => $quiz->id, "attempted" => false, "score" => null];
+                }
+            }
+            return [
+                'lesson_id' => $this->lesson->id,
+                'lesson_title' => $this->lesson->title,
+                'video_id' => $this->id,
+                'video_title' => $this->title,
+                'video_url' => $this->url,
+                'created_at' => $this->created_at->format('Y-m-d h:i:s'),
+                'quizzes_count' => $this->quizzes->count(),
+                "quizzes" => $quiz_attempted,
+            ];
+        }
 
         return [
             'lesson_id' => $this->lesson->id,
@@ -52,10 +57,8 @@ class VideoResource extends JsonResource
             'video_title' => $this->title,
             'video_url' => $this->url,
             'created_at' => $this->created_at->format('Y-m-d h:i:s'),
-            // 'quizzes'=>new quizCollection($this->quizzes)
             'quizzes_count' => $this->quizzes->count(),
             'quizzes' => $this->quizzes->pluck('id')->toArray(),
-
         ];
     }
 }

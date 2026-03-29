@@ -52,7 +52,7 @@ This document describes all the available API routes for the backend, including 
         }
         ```
 
-### Content Browsing Routes (Student)
+### Content Browsing Routes
 
 - **GET** `/subjects`
     - Description: Retrieve all subjects.
@@ -73,7 +73,7 @@ This document describes all the available API routes for the backend, including 
     - Description: Retrieve all lessons taught by a specific teacher.
 
 - **GET** `/teachers/{teacher}/lessons/{lesson}/content`
-    - Description: Retrieve the content of a specific lesson taught by a teacher.
+    - Description: Retrieve the content (video/quiz) of a specific lesson taught by a teacher.
 
 ---
 
@@ -94,10 +94,10 @@ All routes in this section require the `auth:api` middleware.
     - **Request Body:**
         ```json
         {
-            "name": "string (optional, max 255 characters)",
+            "name": "string (optional, max 255)",
             "email": "string (optional, valid email, unique)",
             "password": "string (optional, min 8 characters)",
-            "password_confirmation": "string (required if password is provided)"
+            "subject_id": "integer (optional, only for teacher)"
         }
         ```
         **Example:**
@@ -220,10 +220,10 @@ All routes in this section require the `auth:api` middleware.
                 ```
         - **DELETE** `/videos/{video}`: Delete a specific video
 
-### Subject Routes
+### Miscellaneous / Subject Routes
 
 - **GET** `/quizzes-details/{quiz}`
-    - Description: Retrieve detailed information about a specific quiz.
+    - Description: Retrieve detailed information about a specific quiz for a given teacher (Uses scope bindings).
 
 - **GET** `/subjects/{subject}/subtopics`
     - Description: Retrieve all subtopics for a specific subject.
