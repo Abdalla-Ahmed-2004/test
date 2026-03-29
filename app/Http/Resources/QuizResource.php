@@ -16,7 +16,7 @@ class QuizResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'quiz_attempt'=>JWTAuth::user()->student->quizzesAttempt()->where('quiz_id', $this->id)->first()? true:false,
+           
             'quiz_id' => $this->id,
             'lesson_id' => $this->lesson->id,
             'lesson_name' => $this->lesson->title,

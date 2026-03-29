@@ -77,14 +77,17 @@ class TeacherController extends Controller
     public function showQuiz(Quiz $quiz)
     {
         // dd($teacher->videos->quiz);
-        $student = JWTAuth::user()->student;
-        $teacher = $quiz->teacher;
-        // dd($student->quizzesAttempt->where('quiz_id', $quiz->id)->first());
-        if ($student->quizzesAttempt->where('quiz_id', $quiz->id)->first()) {
-            return response()->json([
-                'message' => 'you attempt this quiz ',
-            ]);
+        if (JWTAuth::user() && JWTAuth::user()->hasRole('student')) {
+            $student = JWTAuth::user()->student;
+            if ($student->quizzesAttempt->where('quiz_id', $quiz->id)->first()) {
+                return response()->json([
+                    'message' => 'you attempt this quiz ',
+                ]);
+            }
         }
+       
+        $teacher = $quiz->teacher;
+      
 
         return ['teacher' => new TeacherResource($teacher), 'quiz' => new QuizResource($quiz)];
         // return (new teacherResource($teacher))->additional([ 'quiz'=> new quizResource($quiz)]);
