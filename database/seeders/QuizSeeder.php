@@ -12,6 +12,13 @@ class QuizSeeder extends Seeder
      */
     public function run(): void
     {
-        Quiz::factory(20)->create();
+        $videos = \App\Models\Video::all();
+        foreach ($videos as $video) {
+            Quiz::factory()->create([
+                'teacher_id' => $video->teacher_id,
+                'video_id' => $video->id,
+                'lesson_id' => $video->lesson_id,
+            ]);
+        }
     }
 }

@@ -22,11 +22,11 @@ class QuizFactory extends Factory
         return [
             'teacher_id' => function () {
                 // Ensure teacher has videos, or fallback to any teacher (video will be created if needed)
-                return Teacher::whereHas('videos')->inRandomOrder()->value('id') ?? Teacher::factory()->create()->id;
+                return Teacher::whereHas('videos')->first()->id ?? Teacher::factory()->create()->id;
             },
             'video_id' => function (array $attributes) {
                 // Use a video from the selected teacher, or create one if none exist
-                $video = Video::where('teacher_id', $attributes['teacher_id'])->inRandomOrder()->first();
+                $video = Video::where('teacher_id', $attributes['teacher_id'])->first();
                 if (!$video) {
                     $video = Video::factory()->create(['teacher_id' => $attributes['teacher_id']]);
                 }

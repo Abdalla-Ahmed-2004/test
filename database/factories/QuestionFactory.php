@@ -21,12 +21,12 @@ class QuestionFactory extends Factory
         return [
             'quiz_id' => function () {
                 // Get a quiz that belongs to a lesson with subtopics
-                return Quiz::whereHas('lesson.subtopics')->inRandomOrder()->value('id') ?? Quiz::factory()->create()->id;
+                return Quiz::whereHas('lesson.subtopics')->first()->id ?? Quiz::factory()->create()->id;
             },
             'subtopic_id' => function (array $attributes) {
                 // Scope subtopic to the quiz's lesson
                 $quiz = Quiz::find($attributes['quiz_id']);
-                $subtopic = Subtopic::where('lesson_id', $quiz->lesson_id)->inRandomOrder()->first();
+                $subtopic = Subtopic::where('lesson_id', $quiz->lesson_id)->first();
 
                 if (!$subtopic) {
                     // Fallback just in case

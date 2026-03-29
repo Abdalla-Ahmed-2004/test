@@ -12,6 +12,20 @@ class QuestionSeeder extends Seeder
      */
     public function run(): void
     {
-        Question::factory(50)->create();
+        $quizzes = \App\Models\Quiz::all();
+        foreach ($quizzes as $quiz) {
+            $subtopic = \App\Models\Subtopic::where('lesson_id', $quiz->lesson_id)->first();
+            if (!$subtopic) {
+                $subtopic = \App\Models\Subtopic::factory()->create(['lesson_id' => $quiz->lesson_id]);
+            }
+
+            // Create 5 questions per quiz explicitly
+            for ($i = 0; $i < 5; $i++) {
+                Question::factory()->create([
+                    'quiz_id' => $quiz->id,
+                    'subtopic_id' => $subtopic->id,
+                ]);
+            }
+        }
     }
 }
