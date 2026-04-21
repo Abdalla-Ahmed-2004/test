@@ -18,6 +18,8 @@ class QuizAttemptResource extends JsonResource
             'id' => $this->id,
             'student_id' => $this->student->id,
             'quiz_id' => $this->quiz->id,
+            'quiz_title' => $this->quiz->title,
+            'subject' => $this->quiz->lesson->subject(),
             'lesson_title' => $this->quiz->lesson->title,
             'video_title' => $this->quiz->video->title,
             'teacher_name' => $this->quiz->teacher->user->name,

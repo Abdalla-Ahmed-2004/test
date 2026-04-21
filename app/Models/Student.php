@@ -28,7 +28,7 @@ class Student extends Model
     {
         return $this->hasMany(QuizAttempt::class);
     }
-
+    
     public function weaknessProfiles()
     {
         return $this->hasMany(WeaknessProfile::class);

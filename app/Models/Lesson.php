@@ -20,6 +20,10 @@ class Lesson extends Model
     {
         return $this->belongsTo(Unit::class);
     }
+    public function subject()
+    {
+        return $this->unit->subject;
+    }
 
     public function subtopics()
     {

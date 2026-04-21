@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\QuizController;
@@ -23,7 +24,7 @@ Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,
 Route::get('subjects', [SubjectController::class, 'index']);
 Route::get('subjects/{subject}/units', [UnitController::class, 'index']);
 Route::get('units/{unit}/lessons', [LessonController::class, 'index']);
-Route::get('lesson/{lesson}/subtopics', [SubtopicController::class, 'index']);
+Route::get('lessons/{lesson}/subtopics', [SubtopicController::class, 'index']);
 // 
 Route::get('subjects/{subject}/teachers', [TeacherController::class, 'index']);
 Route::get('teachers/{teacher}/lessons', [TeacherController::class, 'show']);
@@ -53,11 +54,15 @@ Route::middleware('auth:api')->group(function () {
 
     // Legacy / Other
 
-   
+
     Route::get('quizzes-details/{quiz}', [TeacherController::class, 'showQuiz'])->scopeBindings();
     Route::post('quiz/{quiz}/answer', [StudentAnswerController::class, 'answer'])->middleware(['role:student']);
     Route::get('students/attempts', [QuizAttemptController::class, 'index'])->middleware(['role:student']);
     Route::get('subjects/{subject}/subtopics', [SubjectController::class, 'showSubtopics']);
+
+    // Chat & AI Routes
+    Route::post('chat/send', [ChatController::class, 'send'])->middleware('throttle:30,1');
+    Route::get('chat/session', [ChatController::class, 'getSession']);
 });
 
 // Route::middleware(['auth:api', 'role:teacher'])->group(function () {
