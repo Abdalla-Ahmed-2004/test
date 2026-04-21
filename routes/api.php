@@ -18,6 +18,9 @@ use App\Models\Subject;
 use App\Models\Teacher;
 use Illuminate\Support\Facades\Route;
 
+
+
+Route::get('te', [TeacherController::class, 'test']);
 Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 // Content Browsing (Student)
@@ -45,7 +48,7 @@ Route::middleware('auth:api')->group(function () {
     // Teacher Content Management (already existed, scoped in controller)
     Route::apiResource('videos', VideoController::class)->middleware(['role:teacher']);
     Route::apiResource('quizzes', QuizController::class)->middleware(['role:teacher']);
-
+    // Route::get('teachers/{teacher}/content', [TeacherController::class, 'TeacherContent'])->scopeBindings();
     // // Quiz Taking Flow (New Incremental Flow)
     // Route::post('quizzes/{quiz}/attempt', [QuizAttemptController::class, 'start'])->middleware(['role:student']);
     Route::post('attempts/{attempt}/answer', [QuizAttemptController::class, 'answer'])->middleware(['role:student']);

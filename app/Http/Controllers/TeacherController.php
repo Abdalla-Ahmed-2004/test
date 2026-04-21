@@ -93,7 +93,15 @@ class TeacherController extends Controller
         // return (new teacherResource($teacher))->additional([ 'quiz'=> new quizResource($quiz)]);
         // return (new teacherResource($teacher))->additional([ 'lessons'=> $teacher->videos->load('lesson:id,title')->pluck('lesson')]);
     }
+    public function TeacherContent(Teacher $teacher)
+    {
+        $videos = $teacher->videos()->paginate(10);
 
+        return response()->json([
+            'teacher' => new TeacherResource($teacher),
+            'content' => (new VideoCollection($videos))->response()->getData(true)
+        ]);
+    }
     /**
      * Update the specified resource in storage.
      */

@@ -58,7 +58,8 @@ class VideoResource extends JsonResource
             'video_url' => $this->url,
             'created_at' => $this->created_at->format('Y-m-d h:i:s'),
             'quizzes_count' => $this->quizzes->count(),
-            'quizzes' => $this->quizzes->pluck('id')->toArray(),
+            'quizzes' => $this->quizzes->select('id', 'title')->toArray(),
+            
         ];
     }
 }

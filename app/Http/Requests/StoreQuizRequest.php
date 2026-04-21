@@ -18,6 +18,7 @@ class StorequizRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'title' => 'nullable|string|max:255',
             'video_id' => 'required|integer',
             'questions' => 'required|array|min:1', // Assuming at least one question
             'questions.*.question' => 'required|string',
