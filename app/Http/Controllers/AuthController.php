@@ -6,6 +6,8 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\StudentResource;
 use App\Http\Resources\TeacherResource;
+use App\Models\QuizAttempt;
+use App\Models\StudentAnswer;
 use App\Models\Subject;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -46,10 +48,16 @@ class AuthController extends Controller
         if (! $token = JWTAuth::attempt($credentials)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
-
+    if (JWTAuth::user()->hasRole('teacher')) {
+            $teacher = JWTAuth::user()->teacher;
+            $points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })->select('score')->avg('score');
+        }
         return response()->json([
+
             'user' => JWTAuth::user()->hasRole('teacher') ?
-                new TeacherResource(JWTAuth::user()->teacher) :
+                (new TeacherResource(JWTAuth::user()->teacher))->additional(['videos_count' => JWTAuth::user()->teacher->videos()->count(), 'quizzes_count' => JWTAuth::user()->teacher->quizzes()->count(), 'average_score' => $points])->response()->getData(true) :
                 new StudentResource(JWTAuth::user()->student),
             'token' => $token,
         ], 201);

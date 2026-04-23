@@ -10,6 +10,7 @@ use App\Http\Resources\teacherResource;
 use App\Http\Resources\VideoCollection;
 use App\Models\Lesson;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\Video;
@@ -17,9 +18,16 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class TeacherController extends Controller
 {
-    public function test(Subject $subject, Teacher $teacher, Video $video)
+    public function test(Teacher $teacher)
     {
-        return '54';
+        // dd($teacher);
+    $points=QuizAttempt::whereHas('quiz', function($q) use ($teacher) {
+        $q->where('teacher_id', $teacher->id);
+    })->select('score')->avg('score');
+        
+    
+    
+    return [$points];
     }
 
     /**
