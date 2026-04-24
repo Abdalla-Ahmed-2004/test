@@ -16,12 +16,13 @@ class QuizResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-           
+            'quiz_title' => $this->title,
             'quiz_id' => $this->id,
             'lesson_id' => $this->lesson->id,
             'lesson_name' => $this->lesson->title,
             'created_at' => $this->created_at->format('Y-m-d h:i:s'),
             'questions' => new QuestionCollection($this->questions),
+            'quiz_attempts_count' =>$this->quizzesAttempt()->count(),
         ];
     }
 }

@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreteacherRequest;
 use App\Http\Requests\UpdateteacherRequest;
+use App\Http\Resources\LessonAttempResource;
+use App\Http\Resources\LessonAttemptCollection;
 use App\Http\Resources\quizResource;
 use App\Http\Resources\TeacherCollection;
 use App\Http\Resources\teacherResource;
 use App\Http\Resources\VideoCollection;
+use App\Http\Resources\VideoResource;
 use App\Models\Lesson;
+use App\Models\LessonAttempt;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\Subject;
@@ -21,13 +25,13 @@ class TeacherController extends Controller
     public function test(Teacher $teacher)
     {
         // dd($teacher);
-    $points=QuizAttempt::whereHas('quiz', function($q) use ($teacher) {
-        $q->where('teacher_id', $teacher->id);
-    })->select('score')->avg('score');
-        
-    
-    
-    return [$points];
+        $points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+            $q->where('teacher_id', $teacher->id);
+        })->select('score')->avg('score');
+
+
+
+        return [$points];
     }
 
     /**
@@ -74,11 +78,26 @@ class TeacherController extends Controller
 
     public function showContent(Teacher $teacher, Lesson $lesson)
     {
-        $videos = $teacher->videos()->where('lesson_id', $lesson->id)->paginate(10);
+        // Record the lesson attempt
+        if (JWTAuth::user() && JWTAuth::user()->hasRole('student')) {
+            $student = JWTAuth::user()->student;
+    // dd($student);
+            // Create a lesson attempt if it doesn't already exist for this attempt session
+            LessonAttempt::firstOrCreate(
+                [
+                    'student_id' => $student->id,
+                    'lesson_id' => $lesson->id,
+                ]
+            );
+        }
+
+        $videos = $teacher->videos()->where('lesson_id', $lesson->id)->first();
+        $videos->update(['views' => $videos->views + 1]);
 
         return response()->json([
             'teacher' => new TeacherResource($teacher),
-            'videos' => (new VideoCollection($videos))->response()->getData(true)
+            'videos' => (new VideoResource($videos)),
+            // 'quizzes' => (new quizResource($videos->quizzes()->first())),
         ]);
     }
 
@@ -93,21 +112,35 @@ class TeacherController extends Controller
                 ]);
             }
         }
-       
+
         $teacher = $quiz->teacher;
-      
+
 
         return ['teacher' => new TeacherResource($teacher), 'quiz' => new QuizResource($quiz)];
         // return (new teacherResource($teacher))->additional([ 'quiz'=> new quizResource($quiz)]);
         // return (new teacherResource($teacher))->additional([ 'lessons'=> $teacher->videos->load('lesson:id,title')->pluck('lesson')]);
     }
-    public function TeacherContent(Teacher $teacher)
+    public function TeacherDashboard(Teacher $teacher)
     {
-        $videos = $teacher->videos()->paginate(10);
+        // dd($teacher);
 
+        $videos_count = $teacher->videos()->count();
+        $quizzes_count = $teacher->quizzes()->count();
+        $teacher = JWTAuth::user()->teacher;
+        $points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+            $q->where('teacher_id', $teacher->id);
+        })->select('score')->avg('score');
+        
+    $student_attempts = new LessonAttemptCollection($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
+    // $student_attempts =  ($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
         return response()->json([
-            'teacher' => new TeacherResource($teacher),
-            'content' => (new VideoCollection($videos))->response()->getData(true)
+            'teacher' => (new TeacherResource($teacher)),
+            'videos_count' => $videos_count,
+            'quizzes_count' => $quizzes_count,
+            'average_score' => $points,
+            'quiz_attempts_count' => $teacher->quizzes()->withCount('quizzesAttempt')->get(),
+            'student_attempts' => $student_attempts
+
         ]);
     }
     /**

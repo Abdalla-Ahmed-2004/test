@@ -28,7 +28,12 @@ class Student extends Model
     {
         return $this->hasMany(QuizAttempt::class);
     }
-    
+
+    public function lessonAttempts()
+    {
+        return $this->hasMany(LessonAttempt::class);
+    }
+
     public function weaknessProfiles()
     {
         return $this->hasMany(WeaknessProfile::class);

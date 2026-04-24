@@ -47,6 +47,7 @@ class VideoResource extends JsonResource
                 'created_at' => $this->created_at->format('Y-m-d h:i:s'),
                 'quizzes_count' => $this->quizzes->count(),
                 "quizzes" => $quiz_attempted,
+                'views' => $this->views,
             ];
         }
 
@@ -59,7 +60,7 @@ class VideoResource extends JsonResource
             'created_at' => $this->created_at->format('Y-m-d h:i:s'),
             'quizzes_count' => $this->quizzes->count(),
             'quizzes' => $this->quizzes->select('id', 'title')->toArray(),
-            
+            'views' => $this->views,
         ];
     }
 }
