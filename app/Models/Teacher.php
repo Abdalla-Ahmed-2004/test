@@ -58,4 +58,8 @@ class Teacher extends Model
     {
         return $this->hasMany(Video::class);
     }
+    public function lessonAttempts()
+    {
+        return $this->hasMany(LessonAttempt::class);
+    }
 }

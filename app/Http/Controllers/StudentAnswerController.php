@@ -6,6 +6,7 @@ use App\Http\Requests\StoreStudentAnswerRequest;
 use App\Http\Requests\UpdateStudentAnswerRequest;
 use App\Http\Resources\QuizAttemptCollection;
 use App\Http\Resources\StudentAnswerCollection;
+use App\Models\LessonAttempt;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\StudentAnswer;
@@ -84,6 +85,9 @@ class StudentAnswerController extends Controller
     public function answer(StoreStudentAnswerRequest $request, Quiz $quiz)
     {
         // dd($quiz);
+        LessonAttempt::where('student_id', JWTAuth::user()->student->id)
+            ->where('lesson_id', $quiz->video->lesson_id)
+            ->update(['quiz_attempted' => true, 'quiz_id' => $quiz->id, 'video_id' => $quiz->video_id, 'teacher_id' => $quiz->teacher_id]);
         $student = JWTAuth::user()->student;
         // dd($student);
         $answers = $request->validated();

@@ -15,6 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
+            $table->foreignId('video_id')->constrained()->onDelete('cascade');
+            $table->foreignId('quiz_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
+            $table->boolean('quiz_attempted')->default(false);
             $table->timestamps();
         });
     }

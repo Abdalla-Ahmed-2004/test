@@ -6,6 +6,7 @@ use App\Http\Requests\StoreteacherRequest;
 use App\Http\Requests\UpdateteacherRequest;
 use App\Http\Resources\LessonAttempResource;
 use App\Http\Resources\LessonAttemptCollection;
+use App\Http\Resources\LessonCollection;
 use App\Http\Resources\quizResource;
 use App\Http\Resources\TeacherCollection;
 use App\Http\Resources\teacherResource;
@@ -80,6 +81,9 @@ class TeacherController extends Controller
     {
         // Record the lesson attempt
         if (JWTAuth::user() && JWTAuth::user()->hasRole('student')) {
+            $videos = $teacher->videos()->where('lesson_id', $lesson->id)->first();
+            $videos->update(['views' => $videos->views + 1]);
+
             $student = JWTAuth::user()->student;
     // dd($student);
             // Create a lesson attempt if it doesn't already exist for this attempt session
@@ -87,18 +91,18 @@ class TeacherController extends Controller
                 [
                     'student_id' => $student->id,
                     'lesson_id' => $lesson->id,
+                    'video_id' => $videos->id,
+                    'teacher_id' => $teacher->id,
                 ]
             );
-        }
-
-        $videos = $teacher->videos()->where('lesson_id', $lesson->id)->first();
-        $videos->update(['views' => $videos->views + 1]);
-
-        return response()->json([
-            'teacher' => new TeacherResource($teacher),
-            'videos' => (new VideoResource($videos)),
-            // 'quizzes' => (new quizResource($videos->quizzes()->first())),
-        ]);
+            
+            
+            return response()->json([
+                'teacher' => new TeacherResource($teacher),
+                'videos' => (new VideoResource($videos)),
+                // 'quizzes' => (new quizResource($videos->quizzes()->first())),
+                ]);
+                }
     }
 
     public function showQuiz(Quiz $quiz)
@@ -120,10 +124,10 @@ class TeacherController extends Controller
         // return (new teacherResource($teacher))->additional([ 'quiz'=> new quizResource($quiz)]);
         // return (new teacherResource($teacher))->additional([ 'lessons'=> $teacher->videos->load('lesson:id,title')->pluck('lesson')]);
     }
-    public function TeacherDashboard(Teacher $teacher)
+    public function TeacherDashboard()
     {
         // dd($teacher);
-
+    $teacher = JWTAuth::user()->teacher;
         $videos_count = $teacher->videos()->count();
         $quizzes_count = $teacher->quizzes()->count();
         $teacher = JWTAuth::user()->teacher;
@@ -131,7 +135,7 @@ class TeacherController extends Controller
             $q->where('teacher_id', $teacher->id);
         })->select('score')->avg('score');
         
-    $student_attempts = new LessonAttemptCollection($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
+    
     // $student_attempts =  ($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
         return response()->json([
             'teacher' => (new TeacherResource($teacher)),
@@ -139,8 +143,8 @@ class TeacherController extends Controller
             'quizzes_count' => $quizzes_count,
             'average_score' => $points,
             'quiz_attempts_count' => $teacher->quizzes()->withCount('quizzesAttempt')->get(),
-            'student_attempts' => $student_attempts
-
+            
+            'student_attempts' => new LessonAttemptCollection($teacher->lessonAttempts()->orderBy('student_id')->get()),
         ]);
     }
     /**

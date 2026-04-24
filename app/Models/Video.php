@@ -44,4 +44,9 @@ class Video extends Model
     {
         return $this->hasMany(Quiz::class);
     }
+    
+    public function lessonAttempts()
+    {
+        return $this->hasMany(LessonAttempt::class);
+    }
 }
