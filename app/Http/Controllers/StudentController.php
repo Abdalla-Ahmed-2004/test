@@ -23,11 +23,15 @@ class StudentController extends Controller
             'student' => new StudentResource($student),
              'lesson_attempts_completed_count' => $lesson_attempts->count(),
                 'lesson_attempts' => $student->lessonAttempts->map(function ($attempt) use($student) {
-                    return [
+                $score = $attempt->quiz_id ? $student->quizzesAttempt()->where('quiz_id', $attempt->quiz_id)->value('score') : null;
+                $total_marks = $attempt->quiz_id ? $attempt->quiz->total_marks : null;
+                return [
                         'lesson_title' => $attempt->lesson->title,
                         'video_title' => $attempt->video->title,
                         'quiz_title' => $attempt->quiz ? $attempt->quiz->title : null,
-                        'score' => $attempt->quiz_id ? $student->quizzesAttempt()->where('quiz_id', $attempt->quiz_id)->value('score') : null,
+                        'score' => $score,
+                        'total_marks' => $attempt->quiz_id ? $attempt->quiz->total_marks : null,
+                        'percentage' => $attempt->quiz_id && $total_marks ? round(($score / $total_marks) * 100, 2) : null,
                         'attempted_at' => $attempt->created_at->format('Y-m-d H:i:s'),
                     ];
                 }),

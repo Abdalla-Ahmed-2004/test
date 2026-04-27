@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('lesson_id')->constrained() ->onDelete('cascade');
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
             $table->foreignId('video_id')->constrained() ->onDelete('cascade');
+            $table->string('title')->nullable();
+            $table->integer('total_marks')->nullable();
+            $table->unsignedSmallInteger('time_limit')->nullable(); // minutes
             $table->timestamps();
         });
     }

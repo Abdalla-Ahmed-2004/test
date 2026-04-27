@@ -16,6 +16,7 @@ class Quiz extends Model
         'video_id',
         'title',
         'time_limit',
+        'total_marks'
     ];
 
     protected static function booted()

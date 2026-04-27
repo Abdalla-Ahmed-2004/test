@@ -58,7 +58,9 @@ class QuizController extends Controller
                 'cognitive_skill' => $qData['cognitive_skill'] ?? null,
             ]);
         }
-
+        $quiz->update([
+            'total_marks' => $quiz->questions()->count(),
+        ]);
         return ['questions_of_quiz' => $quiz->questions()->paginate(10)];
     }
 

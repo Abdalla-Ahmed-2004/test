@@ -85,10 +85,10 @@ class StudentAnswerController extends Controller
     public function answer(StoreStudentAnswerRequest $request, Quiz $quiz)
     {
         // dd($quiz);
-        LessonAttempt::where('student_id', JWTAuth::user()->student->id)
+        $student = JWTAuth::user()->student;
+        LessonAttempt::where('student_id', $student->id)
             ->where('lesson_id', $quiz->video->lesson_id)
             ->update(['quiz_attempted' => true, 'quiz_id' => $quiz->id, 'video_id' => $quiz->video_id, 'teacher_id' => $quiz->teacher_id]);
-        $student = JWTAuth::user()->student;
         // dd($student);
         $answers = $request->validated();
         if ($student->quizzesAttempt()->where('quiz_id', $quiz->id)->first()) {
@@ -109,10 +109,12 @@ class StudentAnswerController extends Controller
                 'correctness' => $isCorrect,
             ]);
         }
-        $quizAttempt = QuizAttempt::create([
+        
+       QuizAttempt::create([
             'quiz_id' => $quiz->id,
             'student_id' => $student->id,
             'score' => $score,
+            'total_marks' => $quiz->total_marks,
         ]);
         // dd($quiz->questions);
         // $question = $quiz->questions()->findOrFail($answers['answers'][0]['question_id']);
@@ -131,7 +133,7 @@ class StudentAnswerController extends Controller
         //     ]
         // );
 
-        return response()->json(['message' => 'Answer saved', 'answers' => $answers['answers'],'correct_answers_quiz' => $quiz->questions()->get(['id','question', 'correct_answer']), 'score' => $score]);
+        return response()->json(['message' => 'Answer saved', 'answers' => $answers['answers'],'correct_answers_quiz' => $quiz->questions()->get(['id','question', 'correct_answer']), 'score' => $score.'/'.$questions_count]);
     }
 
     /**

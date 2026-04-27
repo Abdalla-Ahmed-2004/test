@@ -28,7 +28,8 @@ class TeacherController extends Controller
         // dd($teacher);
         $points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
-        })->select('score')->avg('score');
+        })->avg(\DB::raw('(score / NULLIF((SELECT COUNT(*) FROM questions WHERE questions.quiz_id = quiz_attempts.quiz_id), 0)) * 100'));
+        $points = round((float) $points, 2);
 
 
 
@@ -85,7 +86,7 @@ class TeacherController extends Controller
             $videos->update(['views' => $videos->views + 1]);
 
             $student = JWTAuth::user()->student;
-    // dd($student);
+            // dd($student);
             // Create a lesson attempt if it doesn't already exist for this attempt session
             LessonAttempt::firstOrCreate(
                 [
@@ -95,14 +96,14 @@ class TeacherController extends Controller
                     'teacher_id' => $teacher->id,
                 ]
             );
-            
-            
+
+
             return response()->json([
                 'teacher' => new TeacherResource($teacher),
                 'videos' => (new VideoResource($videos)),
                 // 'quizzes' => (new quizResource($videos->quizzes()->first())),
-                ]);
-                }
+            ]);
+        }
     }
 
     public function showQuiz(Quiz $quiz)
@@ -127,23 +128,39 @@ class TeacherController extends Controller
     public function TeacherDashboard()
     {
         // dd($teacher);
-    $teacher = JWTAuth::user()->teacher;
+        $teacher = JWTAuth::user()->teacher;
         $videos_count = $teacher->videos()->count();
         $quizzes_count = $teacher->quizzes()->count();
         $teacher = JWTAuth::user()->teacher;
-        $points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+        $students_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
-        })->select('score')->avg('score');
-        
-    
-    // $student_attempts =  ($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
+        })->select('score')->sum('score');
+
+        // $all_possible_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+        //     $q->where('teacher_id', $teacher->id);
+        // })->with(['quiz' => function ($query) {
+        //     // This adds a 'questions_count' to each loaded Quiz model
+        //     $query->withCount('questions');
+        // }])->get()->sum('quiz.questions_count');
+
+$all_possible_points = \DB::table('quiz_attempts')
+    ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
+    ->join('questions', 'quizzes.id', '=', 'questions.quiz_id')
+    ->where('quizzes.teacher_id', $teacher->id)
+    ->count(); // Returns the exact same integer
+
+    $percentage = $quizzes_count > 0 ? round($students_points / $all_possible_points, 2)*100 : 0;
+
+
+
+        // $student_attempts =  ($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
         return response()->json([
             'teacher' => (new TeacherResource($teacher)),
             'videos_count' => $videos_count,
             'quizzes_count' => $quizzes_count,
-            'average_score' => $points,
+            'average_score' => $percentage . '%',
             'quiz_attempts_count' => $teacher->quizzes()->withCount('quizzesAttempt')->get(),
-            
+
             'student_attempts' => new LessonAttemptCollection($teacher->lessonAttempts()->orderBy('student_id')->get()),
         ]);
     }

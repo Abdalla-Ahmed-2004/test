@@ -32,6 +32,7 @@ class LessonAttemptResource extends JsonResource
             'student_name' => $this->student->user->name,
             'student_email' => $this->student->user->email,
             'score' => $this->quiz_id ? $this->student->quizzesAttempt()->where('quiz_id', $this->quiz_id)->value('score') : null,
+            'total_marks' => $this->quiz_id ? $this->quiz->total_marks : null,
             'attempted_at' => $this->created_at->format('Y-m-d H:i:s'),
             
         ];
