@@ -21,7 +21,7 @@ class StudentController extends Controller
          return response()->json([
             'message' => 'Student dashboard data retrieved successfully',
             'student' => new StudentResource($student),
-             'lesson_attempts_completed_count' => $lesson_attempts->count(),
+            'lesson_attempts_completed_count' => $lesson_attempts->count(),
                 'lesson_attempts' => $student->lessonAttempts->map(function ($attempt) use($student) {
                 $score = $attempt->quiz_id ? $student->quizzesAttempt()->where('quiz_id', $attempt->quiz_id)->value('score') : null;
                 $total_marks = $attempt->quiz_id ? $attempt->quiz->total_marks : null;

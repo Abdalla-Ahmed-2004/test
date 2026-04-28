@@ -39,6 +39,7 @@ class QuizFactory extends Factory
             },
             'title' => $this->faker->sentence(3) . ' Quiz',
             'time_limit' => $this->faker->randomElement([15, 30, 45, 60]),
+            'total_marks' => $this->faker->numberBetween(10, 100),
         ];
     }
 }

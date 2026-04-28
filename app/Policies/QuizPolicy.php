@@ -41,6 +41,9 @@ class QuizPolicy
      */
     public function update(User $user, quiz $quiz): bool
     {
+        if ($user->hasRole('teacher') && $user->teacher->id == $quiz->teacher_id) {
+            return true;
+        }
         return false;
     }
 
@@ -49,6 +52,9 @@ class QuizPolicy
      */
     public function delete(User $user, quiz $quiz): bool
     {
+            if ($user->hasRole('teacher') && $user->teacher->id == $quiz->teacher_id) {
+                return true;
+            }
         return false;
     }
 

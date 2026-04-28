@@ -85,6 +85,7 @@ class QuizController extends Controller
      */
     public function destroy(Video $video, Quiz $quiz)
     {
+        Gate::authorize('delete', [Quiz::class, $video]);
         $quiz->delete();
 
         return response()->json([

@@ -91,9 +91,9 @@ class StudentAnswerController extends Controller
             ->update(['quiz_attempted' => true, 'quiz_id' => $quiz->id, 'video_id' => $quiz->video_id, 'teacher_id' => $quiz->teacher_id]);
         // dd($student);
         $answers = $request->validated();
-        if ($student->quizzesAttempt()->where('quiz_id', $quiz->id)->first()) {
-            return response()->json(['message' => 'Attempt already submitted'], 400);
-        }
+        // if ($student->quizzesAttempt()->where('quiz_id', $quiz->id)->first()) {
+        //     return response()->json(['message' => 'Attempt already submitted'], 400);
+        // }
         $score = 0;
         foreach ($answers['answers'] as $answer) {
             $question = $quiz->questions()->findOrFail($answer['question_id']);
@@ -133,7 +133,7 @@ class StudentAnswerController extends Controller
         //     ]
         // );
 
-        return response()->json(['message' => 'Answer saved', 'answers' => $answers['answers'],'correct_answers_quiz' => $quiz->questions()->get(['id','question', 'correct_answer']), 'score' => $score.'/'.$questions_count]);
+        return response()->json(['message' => 'Answer saved', 'answers' => $answers['answers'],'correct_answers_quiz' => $quiz->questions()->get(['id','question', 'correct_answer']), 'score' => $score, 'total_marks' => $quiz->total_marks]);
     }
 
     /**

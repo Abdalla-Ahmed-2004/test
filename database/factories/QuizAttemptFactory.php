@@ -25,7 +25,11 @@ class QuizAttemptFactory extends Factory
             'quiz_id' => function () {
                 return Quiz::inRandomOrder()->value('id') ?? Quiz::factory()->create()->id;
             },
-            'score' => $this->faker->numberBetween(0, 100),
+            'score' => function (array $attributes) {
+                $quiz = Quiz::find($attributes['quiz_id']);
+                $maxMarks = $quiz->total_marks ?? 100;
+                return $this->faker->numberBetween(0, $maxMarks);
+            },
         ];
     }
 }
