@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->string('url');
             $table->unsignedInteger('duration')->nullable(); // seconds
+            $table->string('thumbnail')->nullable();
             $table->unsignedInteger('views')->default(0);
             $table->timestamps();
         });

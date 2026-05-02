@@ -25,6 +25,11 @@ class StorevideoRequest extends FormRequest
             'lesson_id' => 'required|exists:lessons,id',
             'title' => 'required|string|max:255',
             'file' => 'required|max:102400|mimes:mp4,avi,mov,wmv',
+            'teacher_id' => 'required|exists:teachers,id',
+            'duration' => 'required|integer|min:1',
+            'thumbnail' => 'nullable|image|max:2048',
+            
+            
         ];
     }
 }

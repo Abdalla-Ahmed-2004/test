@@ -22,6 +22,7 @@ class AuthController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
+            'profile_picture' => $data['profile_picture'] ? $data['profile_picture']->storeAs('profile_pictures', uniqid() . '_' . $data['profile_picture']->getClientOriginalName(), 'public') : null,
         ]);
         if (isset($data['teacher']) && $data['teacher']) {
             $user->assignRole('teacher');

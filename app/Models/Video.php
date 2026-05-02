@@ -17,6 +17,7 @@ class Video extends Model
         'url',
         'duration',
         'views',
+        'thumbnail',
     ];
 
     protected static function booted()
