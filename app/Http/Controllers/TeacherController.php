@@ -144,11 +144,11 @@ class TeacherController extends Controller
         // }])->get()->sum('quiz.questions_count');
 
 
-$all_possible_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
-    $q->where('teacher_id', $teacher->id);
-})->with('quiz')->get()->sum('quiz.total_marks');
-// return($all_possible_points);
-    $percentage = $quizzes_count > 0 && $all_possible_points > 0 ? round($students_points / $all_possible_points, 2)*100 : 0;
+        $all_possible_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+            $q->where('teacher_id', $teacher->id);
+        })->with('quiz')->get()->sum('quiz.total_marks');
+        // return($all_possible_points);
+            $percentage = $quizzes_count > 0 && $all_possible_points > 0 ? round($students_points / $all_possible_points, 2)*100 : 0;
 
 
 

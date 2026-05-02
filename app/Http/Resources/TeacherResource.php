@@ -17,6 +17,8 @@ class TeacherResource extends JsonResource
         return [
             'role' => 'teacher',
             'teacher_name' => $this->user->name,
+            'teacher_email' => $this->user->email,
+            'teacher_profile_picture' => $this->user->profile_picture,
             'teacher_id' => $this->id,
             'user_id' => $this->user_id,
             'subject_id' => $this->subject_id,

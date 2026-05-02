@@ -20,6 +20,7 @@ class StudentResource extends JsonResource
             'role' => 'student',
             'student_name' => $this->user->name,
             'student_email' => $this->user->email,
+            'student_profile_picture' => $this->user->profile_picture,
             'created_at' => $this->created_at->format('Y-m-d h:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d h:i:s'),
         ];

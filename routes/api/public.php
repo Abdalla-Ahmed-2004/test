@@ -18,7 +18,7 @@ Route::get('lessons/{lesson}/subtopics', [SubtopicController::class, 'index']);
 
 Route::get('subjects/{subject}/teachers', [TeacherController::class, 'index']);
 Route::get('teachers/{teacher}/lessons', [TeacherController::class, 'show']);
-Route::get('search/teachers', [SearchController::class, 'search']);
+Route::get('search/', [SearchController::class, 'search']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('subjects/{subject}/subtopics', [SubjectController::class, 'showSubtopics']);

@@ -15,7 +15,12 @@ class LessonResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            LessonAttemptCollection::make($this->attempts),
+            'id' => $this->id,
+            'title' => $this->title,
+            'videos' => VideoResource::collection($this->whenLoaded('videos')),
+            // 'subject_id' => $this->subject_id,
+            
+            // 'quizzes' => QuizResource::collection($this->whenLoaded('quizzes')),
         ];
     }
 }
