@@ -109,7 +109,7 @@ class StudentAnswerController extends Controller
                 'correctness' => $isCorrect,
             ]);
         }
-        
+        // $score=StudentAnswer::where('quiz_id', $quiz->id)->where('student_id', $student->id)->where('correctness', true)->count();
        QuizAttempt::create([
             'quiz_id' => $quiz->id,
             'student_id' => $student->id,

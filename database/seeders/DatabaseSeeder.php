@@ -29,8 +29,8 @@ class DatabaseSeeder extends Seeder
             VideoSeeder::class,
             QuizSeeder::class,
             QuestionSeeder::class,
-            QuizAttemptSeeder::class,
-            StudentAnswerSeeder::class,
+            MahmoudMagdySeeder::class,
+            // StudentAnswerSeeder::class,
         ]);
 
         // Clear Faker's unique generator to prevent duplicate issues

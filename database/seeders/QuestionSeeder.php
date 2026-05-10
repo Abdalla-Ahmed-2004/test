@@ -19,8 +19,8 @@ class QuestionSeeder extends Seeder
                 $subtopic = \App\Models\Subtopic::factory()->create(['lesson_id' => $quiz->lesson_id]);
             }
 
-            // Create 5 questions per quiz explicitly
-            for ($i = 0; $i < 5; $i++) {
+            // Create 30 questions per quiz explicitly
+            for ($i = 0; $i < 30; $i++) {
                 Question::factory()->create([
                     'quiz_id' => $quiz->id,
                     'subtopic_id' => $subtopic->id,

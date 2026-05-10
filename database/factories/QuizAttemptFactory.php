@@ -19,17 +19,13 @@ class QuizAttemptFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_id' => function () {
-                return Student::inRandomOrder()->value('id') ?? Student::factory()->create()->id;
-            },
-            'quiz_id' => function () {
-                return Quiz::inRandomOrder()->value('id') ?? Quiz::factory()->create()->id;
-            },
-            'score' => function (array $attributes) {
-                $quiz = Quiz::find($attributes['quiz_id']);
-                $maxMarks = $quiz->total_marks ?? 100;
-                return $this->faker->numberBetween(0, $maxMarks);
-            },
+            // 'student_id' => function () {
+            //     return Student::inRandomOrder()->value('id') ?? Student::factory()->create()->id;
+            // },
+            // 'quiz_id' => function () {
+            //     return Quiz::inRandomOrder()->value('id') ?? Quiz::factory()->create()->id;
+            // },
+            // 'score' => $score=StudentAnswer::where('quiz_id', $quiz->id)->where('student_id', $student->id)->where('correctness', true)->count(),
         ];
     }
 }

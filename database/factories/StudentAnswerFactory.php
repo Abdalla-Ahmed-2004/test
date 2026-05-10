@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Question;
+use App\Models\Quiz;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,25 +19,48 @@ class StudentAnswerFactory extends Factory
      */
     public function definition(): array
     {
+        $quiz_id = Quiz::inRandomOrder()->value('id');
+        $student_id = Student::inRandomOrder()->value('id');
+
         return [
-            'quiz_id' => function () {
-                // Ensure we get a quiz attempt to link to a valid student/quiz combo
-                return \App\Models\QuizAttempt::inRandomOrder()->value('quiz_id') ?? \App\Models\QuizAttempt::factory()->create()->quiz_id;
-            },
-            'student_id' => function (array $attributes) {
-                // Return the student_id that corresponds to this exact attempt on this quiz
-                return \App\Models\QuizAttempt::where('quiz_id', $attributes['quiz_id'])->inRandomOrder()->value('student_id');
-            },
+            'quiz_id' => $quiz_id,
+            'student_id' => $student_id,
             'question_id' => function (array $attributes) {
-                // Return a question that belongs to the same quiz
-                $question = \App\Models\Question::where('quiz_id', $attributes['quiz_id'])->inRandomOrder()->first();
+                // Return a question that belongs to the same quiz and hasn't been answered by this student yet
+                $answeredQuestionIds = \App\Models\StudentAnswer::where('student_id', $attributes['student_id'])
+                    ->where('quiz_id', $attributes['quiz_id'])
+                    ->pluck('question_id')
+                    ->toArray();
+
+                $question = \App\Models\Question::where('quiz_id', $attributes['quiz_id'])
+                    ->whereNotIn('id', $answeredQuestionIds)
+                    ->inRandomOrder()
+                    ->first();
+
                 if (!$question) {
-                    $question = \App\Models\Question::factory()->create(['quiz_id' => $attributes['quiz_id']]);
+                    $question = \App\Models\Question::inRandomOrder()->where('quiz_id', $attributes['quiz_id'])->first() ?? \App\Models\Question::factory()->create(['quiz_id' => $attributes['quiz_id']]);
                 }
                 return $question->id;
             },
-            'answer_text' => $this->faker->sentence(),
-            'correctness' => $this->faker->boolean(),
+            'answer_text' => function (array $attributes) {
+                $question = \App\Models\Question::find($attributes['question_id']);
+                if ($question) {
+                    return $this->faker->randomElement([
+                        $question->option_1,
+                        $question->option_2,
+                        $question->option_3,
+                        $question->option_4
+                    ]);
+                }
+                return $this->faker->word();
+            },
+            'correctness' => function (array $attributes) {
+                $question = \App\Models\Question::find($attributes['question_id']);
+                if ($question) {
+                    return $attributes['answer_text'] === $question->correct_answer;
+                }
+                return false;
+            },
         ];
     }
 }
