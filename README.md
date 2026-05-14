@@ -1,120 +1,87 @@
-# Laravel Project Setup
+# focus_platform — Backend (Laravel)
+
+This repository contains the backend (Laravel) for the Focus platform. This README focuses on setting up and running the backend locally on Windows (XAMPP) or a Unix-like environment.
+
+**Quick links:**
+
+- API reference: [API_Routes.md](API_Routes.md)
 
 ## Prerequisites
 
-Before starting, ensure the following are installed on your system:
+- PHP 8.0+
+- Composer
+- MySQL (or MariaDB)
+- Git
+- Optional: Node.js (for compiling frontend assets)
 
-- **PHP**: Version 8.0 or higher.
-- **Composer**: Dependency manager for PHP.
-- **Node.js**: For frontend asset management.
-- **MySQL**: For the database.
-- **Git**: To clone the repository.
+On Windows, using XAMPP is supported — ensure MySQL and Apache (if needed) are running.
 
----
+## Quick Setup (Windows / XAMPP)
 
-## Installation Steps
+1. Clone the repository and enter it:
 
-### Step 1: Clone the Repository
-
-Run the following command to clone the project:
-
-```bash
-git clone https://github.com/ABDALLAPEPO/focus_platform.git
-cd focus_platform
+```powershell
+git clone https://github.com/Abdalla-Ahmed-2004/focus_platform.git
+cd "focus_platform"
 ```
 
-### Step 2: Install PHP Dependencies
+2. Install PHP dependencies:
 
-Install the required PHP packages using Composer:
-
-```bash
+```powershell
 composer install
 ```
 
-### Step 3: Set Up the `.env` File
+3. Copy the example environment and update values:
 
-1. Copy the `.env.example` file to `.env`:
-    ```bash
-    cp .env.example .env
-    ```
-2. Open the `.env` file and configure the following:
-    - **App Settings**:
-        ```env
-        APP_NAME=Laravel
-        APP_ENV=local
-        APP_KEY=
-        APP_DEBUG=true
-        APP_URL=http://127.0.0.1:8000
-        ```
-    - **Database Settings**:
-        ```env
-        DB_CONNECTION=mysql
-        DB_HOST=127.0.0.1
-        DB_PORT=3306
-        DB_DATABASE=your_database_name
-        DB_USERNAME=your_username
-        DB_PASSWORD=your_password
-        ```
-    - **JWT Secret**:
-      Leave this blank for now; it will be generated in the next step.
-
-### Step 4: Generate the Application Key
-
-Run the following command to generate the application key:
-
-```bash
-php artisan key:generate
+```powershell
+copy .env.example .env
+# Edit .env with your DB credentials and APP_URL (use an editor)
 ```
 
-### Step 5: Generate the JWT Secret
+Important `.env` values:
 
-Run the following command to generate the JWT secret:
+- `APP_URL` — e.g. `http://127.0.0.1:8000`
+- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
 
-```bash
+4. Generate keys:
+
+```powershell
+php artisan key:generate
 php artisan jwt:secret
 ```
 
-### Step 6: Run Migrations and Seeders
+5. Create the database (via phpMyAdmin or MySQL CLI) and run migrations + seeders:
 
-Run the database migrations and seeders to set up the database:
-
-```bash
+```powershell
 php artisan migrate --seed
 ```
-<!-- 
-### Step 7: Install Node.js Dependencies
 
-Install the required Node.js packages:
+6. (Optional) Install Node dependencies and build assets:
 
-```bash
+```powershell
 npm install
+npm run dev
 ```
 
-### Step 8: Build Frontend Assets
+7. Start the development server:
 
-Build the frontend assets using Vite:
-
-```bash
-npm run dev
-``` -->
-
-### Step 9: Start the Development Server
-
-Start the Laravel development server:
-
-```bash
+```powershell
 php artisan serve
 ```
 
-The application will now be accessible at `http://127.0.0.1:8000`.
+The API will be available at `http://127.0.0.1:8000/api` by default.
 
----
+## Environment / Permissions
 
-## Additional Notes
+On Linux/macOS, ensure writable directories:
 
-### Clear Caches
+```bash
+chmod -R 775 storage bootstrap/cache
+```
 
-If you encounter issues, clear the Laravel caches:
+## Testing & Debugging
+
+- Clear caches if you run into configuration issues:
 
 ```bash
 php artisan config:clear
@@ -123,84 +90,57 @@ php artisan route:clear
 php artisan view:clear
 ```
 
-### Database Setup
+## Packages Used
 
-Ensure the database is created in MySQL before running migrations.
+- `tymon/jwt-auth` — JWT authentication (generate secret with `php artisan jwt:secret`)
+- `spatie/laravel-permission` — Role & permission management
 
-### Permissions
+## API Reference
 
-Ensure the `storage` and `bootstrap/cache` directories are writable:
+See [API_Routes.md](API_Routes.md) for a current list of endpoints, required roles, and example payloads.
 
-```bash
-chmod -R 775 storage bootstrap/cache
+## Contributing
+
+- Create a feature branch, run tests (if available), and open a PR with a clear description.
+
+---
+
+If you want, I can also add a minimal Postman collection or example curl commands — tell me which format you prefer.
+
+---
+
+## Quick run (copy-paste)
+
+Use the following commands in order to set up and run the backend locally. Adjust `.env` values (DB credentials, APP_URL) before running migrations.
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/Abdalla-Ahmed-2004/focus_platform.git
+cd "focus_platform"
+composer install
+copy .env.example .env
+# Edit .env to set DB_* and APP_URL
+php artisan key:generate
+php artisan jwt:secret
+php artisan migrate --seed
+npm install
+npm run dev
+php artisan serve
 ```
 
----
-
-## Installing Additional Packages
-
-### Install JWT Authentication Package
-
-The project uses the `tymon/jwt-auth` package for JSON Web Token authentication. If you need to install it manually, follow these steps:
-
-1. Require the package via Composer:
-
-    ```bash
-    composer require tymon/jwt-auth
-    ```
-
-2. Publish the configuration file:
-
-    ```bash
-    php artisan vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServiceProvider"
-    ```
-
-3. Generate the JWT secret:
-    ```bash
-    php artisan jwt:secret
-    ```
-
-### Install Spatie Laravel Permission Package
-
-The project uses the `spatie/laravel-permission` package for role and permission management. If you need to install it manually, follow these steps:
-
-1. Require the package via Composer:
-
-    ```bash
-    composer require spatie/laravel-permission
-    ```
-
-2. Publish the configuration and migration files:
-
-    ```bash
-    php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
-    ```
-
-3. Run the migrations to create the necessary tables:
-    ```bash
-    php artisan migrate
-    ```
-
-For more details, refer to the official documentation of each package:
-
-- [JWT Auth Documentation](https://jwt-auth.readthedocs.io/)
-- [Spatie Laravel Permission Documentation](https://spatie.be/docs/laravel-permission/)
-
----
-
-## Summary of Commands
-
-Here’s a quick list of all commands:
+Unix / macOS (bash):
 
 ```bash
-git https://github.com/Abdalla-Ahmed-2004/focus_platform.git;
-cd focus_platform;
-composer install;
-cp .env.example .env;
-php artisan key:generate;
-php artisan jwt:secret;
-php artisan migrate --seed;
-# npm install
-# npm run dev
+git clone https://github.com/Abdalla-Ahmed-2004/focus_platform.git
+cd focus_platform
+composer install
+cp .env.example .env
+# Edit .env to set DB_* and APP_URL
+php artisan key:generate
+php artisan jwt:secret
+php artisan migrate --seed
+npm install
+npm run dev
 php artisan serve
 ```

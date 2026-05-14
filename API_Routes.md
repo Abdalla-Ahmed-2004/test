@@ -1,239 +1,97 @@
-# API Routes Documentation
+# API Routes (current)
 
-This document describes all the available API routes for the backend, including their purpose and usage.
+Base URL: `{{APP_URL}}/api` (e.g. `http://127.0.0.1:8000/api`)
 
-## Public Routes (No Authentication Required)
+Authentication: the API uses JWT. Include the token in the `Authorization` header:
 
-### Authentication Routes
+```
+Authorization: Bearer <token>
+```
 
-- **POST** `/register`
-    - Description: Register a new user.
-    - Rate limit: 5 requests per minute
-    - **Request Body:**
+## Public routes (no authentication)
+
+- `POST /register` — Register a new user (throttle: 5/min)
+    - Body (example):
         ```json
         {
-            "name": "string (required, max 255 characters)",
-            "email": "string (required, valid email, unique)",
-            "password": "string (required, min 6 characters)",
-            "password_confirmation": "string (required, must match password)",
-            "teacher": "boolean (required if student is false)",
-            "student": "boolean (required if teacher is false)",
-            "subject_id": "integer (required if teacher is true, must exist)"
-        }
-        ```
-        **Example:**
-        ```json
-        {
-            "name": "John Teacher",
-            "email": "john@example.com",
-            "password": "password123",
-            "password_confirmation": "password123",
-            "teacher": true,
-            "student": false,
-            "subject_id": 1
+            "name": "Jane",
+            "email": "jane@example.com",
+            "password": "secret",
+            "password_confirmation": "secret",
+            "teacher": false,
+            "student": true
         }
         ```
 
-- **POST** `/login`
-    - Description: Log in an existing user.
-    - Rate limit: 10 requests per minute
-    - **Request Body:**
-        ```json
-        {
-            "email": "string (required, valid email)",
-            "password": "string (required)"
-        }
-        ```
-        **Example:**
-        ```json
-        {
-            "email": "john@example.com",
-            "password": "password123"
-        }
-        ```
+- `POST /login` — Login (throttle: 10/min)
+    - Body: `{ "email": "...", "password": "..." }`
 
-### Content Browsing Routes
+- `GET /landing_page` — Landing page data
+- `GET /subjects` — List subjects
+- `GET /subjects/{subject}/units` — Units for a subject
+- `GET /units/{unit}/lessons` — Lessons for a unit
+- `GET /lessons/{lesson}/subtopics` — Subtopics for a lesson
+- `GET /subjects/{subject}/teachers` — Teachers for a subject
+- `GET /teachers/{teacher}/lessons` — Lessons for a teacher
+- `GET /test/{teacher}` — Developer/test endpoint
+- `GET /search` — Search endpoint (query params)
 
-- **GET** `/subjects`
-    - Description: Retrieve all subjects.
+## Protected routes (require `auth:api`)
 
-- **GET** `/subjects/{subject}/units`
-    - Description: Retrieve all units for a specific subject.
+Authentication endpoints:
 
-- **GET** `/units/{unit}/lessons`
-    - Description: Retrieve all lessons for a specific unit.
+- `POST /logout` — Invalidate current token
+- `GET /me` — Current user profile
+- `PUT /user` — Update current profile (body: `name`, `email`, `password`, `subject_id`)
 
-- **GET** `/lesson/{lesson}/subtopics`
-    - Description: Retrieve all subtopics for a specific lesson.
+Teacher-only (require role:teacher):
 
-- **GET** `/subjects/{subject}/teachers`
-    - Description: Retrieve all teachers for a specific subject.
+- `GET /teachers/dashboard` — Teacher dashboard
+- `GET /teachers/{teacher}/lessons/{lesson}/content` — Lesson content (scope bindings)
+- `GET /quizzes-details/{quiz}` — Quiz details for teacher
+- `API Resource /videos` — `GET|POST|GET /{id}|PUT /{id}|DELETE /{id}` (video CRUD; upload uses form-data)
+- `API Resource /quizzes` — `GET|POST|GET /{id}|PUT /{id}|DELETE /{id}` (quizzes CRUD)
 
-- **GET** `/teachers/{teacher}/lessons`
-    - Description: Retrieve all lessons taught by a specific teacher.
+Student-only (require role:student):
 
-- **GET** `/teachers/{teacher}/lessons/{lesson}/content`
-    - Description: Retrieve the content (video/quiz) of a specific lesson taught by a teacher.
-
----
-
-## Protected Routes (Authentication Required)
-
-All routes in this section require the `auth:api` middleware.
-
-### Authentication Routes
-
-- **POST** `/logout`
-    - Description: Log out the current user.
-
-- **GET** `/me`
-    - Description: Get the current authenticated user's details.
-
-- **PUT** `/user`
-    - Description: Update the current user's profile.
-    - **Request Body:**
-        ```json
-        {
-            "name": "string (optional, max 255)",
-            "email": "string (optional, valid email, unique)",
-            "password": "string (optional, min 8 characters)",
-            "subject_id": "integer (optional, only for teacher)"
-        }
-        ```
-        **Example:**
-        ```json
-        {
-            "name": "John Updated",
-            "email": "john.new@example.com"
-        }
-        ```
-
-### Quiz Attempt Routes (Student Role)
-
-- **POST** `/attempts/{attempt}/answer`
-    - Description: Submit an answer for a quiz attempt.
-    - Requires: Student role
-    - **Request Body:**
-        ```json
-        {
-            "question_id": "integer (required, must exist)",
-            "answer_text": "string (required)"
-        }
-        ```
-
-- **POST** `/quiz/{quiz}/answer`
-    - Description: Submit an answer for a quiz.
-    - Requires: Student role
-    - **Request Body:**
+- `POST /quiz/{quiz}/answer` — Submit answers for a quiz
+    - Body (example):
         ```json
         {
             "answers": [
-                {
-                    "question_id": "integer (required, must exist)",
-                    "answer_text": "string (required)"
-                }
+                { "question_id": 1, "answer_text": "Option A" },
+                { "question_id": 2, "answer_text": "Option B" }
             ]
         }
         ```
-        **Example:**
-        ```json
-        {
-            "answers": [
-                {
-                    "question_id": 1,
-                    "answer_text": "Option A"
-                },
-                {
-                    "question_id": 2,
-                    "answer_text": "Option B"
-                }
-            ]
-        }
-        ```
+- `GET /student/dashboard` — Student dashboard
 
-- **GET** `/students/attempts`
-    - Description: Retrieve all quiz attempts for the current student.
-    - Requires: Student role
+Misc:
 
-### Quiz Management Routes (Teacher Role)
+- `GET /subjects/{subject}/subtopics` — (protected) list subtopics for a subject
 
-- **API Resource** `/quizzes`
-    - Description: Full CRUD operations for quizzes.
-    - Requires: Teacher role
-    - Methods:
-        - **GET** `/quizzes`: Retrieve all quizzes
-        - **POST** `/quizzes`: Create a new quiz
-            - **Request Body:**
-                ```json
-                {
-                    "video_id": "integer (required)",
-                    "questions": [
-                        {
-                            "question": "string (required)",
-                            "option": ["array of strings (required)"],
-                            "correct_answer": "string (required)",
-                            "subtopic_id": "integer (required, must exist)"
-                        }
-                    ]
-                }
-                ```
-                **Example:**
-                ```json
-                {
-                    "video_id": 1,
-                    "questions": [
-                        {
-                            "question": "What is the capital of France?",
-                            "option": ["Paris", "London", "Berlin", "Madrid"],
-                            "correct_answer": "Paris",
-                            "subtopic_id": 1
-                        }
-                    ]
-                }
-                ```
-        - **GET** `/quizzes/{quiz}`: Retrieve a specific quiz
-        - **PUT** `/quizzes/{quiz}`: Update a specific quiz
-            - **Request Body:** Same as POST
-        - **DELETE** `/quizzes/{quiz}`: Delete a specific quiz
+## Examples
 
-### Video Management Routes (Teacher Role)
+Register:
 
-- **API Resource** `/videos`
-    - Description: Full CRUD operations for videos.
-    - Requires: Teacher role
-    - Methods:
-        - **GET** `/videos`: Retrieve all videos
-        - **POST** `/videos`: Create a new video
-            - **Request Body (form-data):**
-                ```
-                lesson_id: integer (required, must exist)
-                title: string (required, max 255 characters)
-                file: file (required, max 100MB, formats: mp4, avi, mov, wmv)
-                ```
-        - **GET** `/videos/{video}`: Retrieve a specific video
-        - **PUT** `/videos/{video}`: Update a specific video
-            - **Request Body:**
-                ```
-                lesson_id: integer (optional, must exist)
-                title: string (optional, max 255 characters)
-                file: file (optional, max 100MB, formats: mp4, avi, mov, wmv)
-                ```
-        - **DELETE** `/videos/{video}`: Delete a specific video
+```bash
+curl -X POST "{{APP_URL}}/api/register" -H "Content-Type: application/json" -d '{"name":"Jane","email":"jane@example.com","password":"secret","password_confirmation":"secret"}'
+```
 
-### Miscellaneous / Subject Routes
+Login (receive `access_token`):
 
-- **GET** `/quizzes-details/{quiz}`
-    - Description: Retrieve detailed information about a specific quiz for a given teacher (Uses scope bindings).
+```bash
+curl -X POST "{{APP_URL}}/api/login" -H "Content-Type: application/json" -d '{"email":"jane@example.com","password":"secret"}'
+```
 
-- **GET** `/subjects/{subject}/subtopics`
-    - Description: Retrieve all subtopics for a specific subject.
+Call protected endpoint (replace `<token>`):
 
----
+```bash
+curl -H "Authorization: Bearer <token>" "{{APP_URL}}/api/subjects"
+```
 
-### Notes
+## Notes
 
-- Replace `{parameter}` with the actual ID or value for the resource.
-- Use appropriate HTTP methods (GET, POST, PUT, DELETE) as specified.
-- Teacher role required for content management (videos, quizzes).
-- Student role required for quiz attempts.
-- Throttle limits apply: Register (5/min), Login (10/min).
+- Replace `{id}` placeholders with resource IDs.
+- Role middleware is applied where noted (`role:teacher` or `role:student`).
+- Throttle limits are enforced on `register`, `login`, and `chat/send`.
