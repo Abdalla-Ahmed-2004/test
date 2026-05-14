@@ -10,7 +10,7 @@ class Student extends Model
     /** @use HasFactory<\Database\Factories\StudentFactory> */
     use HasFactory;
 
-   
+
     protected $fillable = [
         'user_id',
     ];
@@ -37,7 +37,7 @@ class Student extends Model
 
     public function weaknessProfiles()
     {
-        return $this->hasMany(WeaknessProfile::class);
+        return $this->hasMany(StudentSubtopicProgress::class);
     }
 
     public function recommendations()

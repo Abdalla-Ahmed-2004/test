@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
             $table->string('title');
+            $table->float('subtopic_difficulty')->default(0.5); // صعوبة افتراضية 0.5
             $table->timestamps();
         });
     }

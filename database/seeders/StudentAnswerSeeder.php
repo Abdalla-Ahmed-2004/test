@@ -60,6 +60,7 @@ class StudentAnswerSeeder extends Seeder
                         'student_id'  => $student->id,
                         'quiz_id'     => $quiz->id,
                         'question_id' => $question->id,
+                        'subtopic_id' => $question->subtopic_id,
                         'answer_text' => $pickedAnswer,
                         'correctness' => $isCorrect,
                         'created_at'  => now(),

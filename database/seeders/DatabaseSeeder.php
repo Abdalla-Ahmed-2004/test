@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             QuizSeeder::class,
             QuestionSeeder::class,
             MahmoudMagdySeeder::class,
-            // StudentAnswerSeeder::class,
+            StudentAnswerSeeder::class,
         ]);
 
         // Clear Faker's unique generator to prevent duplicate issues

@@ -18,6 +18,8 @@ class StudentAnswer extends Model
         'student_id',
         'answer_text',
         'correctness',
+        'subtopic_id',
+        
     ];
 
     public function quiz()
@@ -34,5 +36,9 @@ class StudentAnswer extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+    public function subtopic()
+    {
+        return $this->belongsTo(Subtopic::class);
     }
 }

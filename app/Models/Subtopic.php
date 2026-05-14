@@ -13,7 +13,7 @@ class Subtopic extends Model
     protected $fillable = [
         'lesson_id',
         'title',
-
+        'subtopic_difficulty',
     ];
 
     public function lesson()
