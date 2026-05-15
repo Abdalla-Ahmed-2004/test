@@ -11,7 +11,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\StudentAnswer;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use App\Services\AIEvaluationService;
+
 use Illuminate\Support\Facades\Http;
 
 class StudentAnswerController extends Controller
@@ -40,9 +40,9 @@ class StudentAnswerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    
 
-    public function answer(StoreStudentAnswerRequest $request, Quiz $quiz, AIEvaluationService $aiService)
+
+    public function answer(StoreStudentAnswerRequest $request, Quiz $quiz)
     {
         // dd($quiz);
         $student = JWTAuth::user()->student;
@@ -70,43 +70,26 @@ class StudentAnswerController extends Controller
                 'correctness' => $isCorrect,
             ]);
         }
-        // $score=StudentAnswer::where('quiz_id', $quiz->id)->where('student_id', $student->id)->where('correctness', true)->count();
+        
         QuizAttempt::create([
             'quiz_id' => $quiz->id,
             'student_id' => $student->id,
             'score' => $score,
             'total_marks' => $quiz->total_marks,
         ]);
-        // dd($quiz->questions);
-        // $question = $quiz->questions()->findOrFail($answers['answers'][0]['question_id']);
-        // dd($question);
-        // $isCorrect = ($question->correct_answer === $answers['answers'][0]['answer_text']);
-        // dd($answers['answers']);
-        // $answer = StudentAnswer::updateOrCreate(
-        //     [
-        //         'student_id' => $student->id,
-        //         'quiz_id' => $quiz->id,
-        //         'question_id' => $answers['answers'][0]['question_id'],
-        //     ],
-        //     [
-        //         'answer_text' => $answers['answers'][0]['answer_text'],
-        //         'correctness' => $isCorrect,
-        //     ]
-        // );
-        // $skillsTested = $quiz->questions()->pluck('subtopic_id')->unique();
-
-        // $results = [];
-        // foreach ($skillsTested as $skillId) {
-        //     // ننده للـ AI Service تقيم المهارة وتحدث مستواه
-        //     $evaluation = $aiService->evaluateStudentSkill($student->id, $skillId);
-        //     $results[] = $evaluation;
-        // }
-
-        // return response()->json([
-        //     'message' => 'Quiz submitted successfully',
-        //     'ai_evaluations' => $results
-        // ]);
-        return response()->json(['message' => 'Answer saved', 'answers' => $answers['answers'], 'correct_answers_quiz' => $quiz->questions()->get(['id', 'question', 'correct_answer']), 'score' => $score, 'total_marks' => $quiz->total_marks]);
+       $answers_correctness = $quiz->questions()->get(['id', 'question', 'correct_answer'])->map(function ($question) use ($student) {
+            $answer = StudentAnswer::where('student_id', $student->id)
+                ->where('question_id', $question->id)
+                ->first();
+            return [
+                'question_id' => $question->id,
+                'question' => $question->question,
+                'correct_answer' => $question->correct_answer,
+                'student_answer' => $answer ? $answer->answer_text : null,
+                'is_correct' => $answer ? $answer->correctness : null,
+            ];
+        });
+        return response()->json(['message' => 'Answer saved', 'answers' => $answers_correctness, 'score' => $score, 'total_marks' => $quiz->total_marks, 'ai_evaluation' => (new StudentController())->subtopicEvaluation($quiz)], 201);
     }
 
     /**

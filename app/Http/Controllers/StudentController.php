@@ -7,7 +7,9 @@ use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
 use App\Models\Student;
 use App\Models\AiPrediction;
+use App\Models\Quiz;
 use App\Models\StudentSubtopicState;
+use App\Models\Subtopic;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Services\AIEvaluationService;
 use Illuminate\Http\Request;
@@ -78,7 +80,7 @@ class StudentController extends Controller
         //
     }
 
-    public function aiTest(Request $request, AIEvaluationService $aiService)
+    public function aiTest(Request $request)
     {
         $payload = $request->json()->all();
 
@@ -87,9 +89,7 @@ class StudentController extends Controller
         }
 
         if (empty($payload)) {
-            return response()->json([
-                'error' => 'No prediction data received.',
-            ], 400);
+            $payload = $this->buildAiTestPayload($this->resolveAiTestUserId());
         }
 
         try {
@@ -101,81 +101,28 @@ class StudentController extends Controller
 
             $items = $this->normalizeAiTestItems($payload);
 
-            // aiTest currently sends the feature rows directly to the AI API.
-            // Database-based feature reconstruction stays commented in the service for later use.
-            $preparedItems = $aiService->buildPredictionItems($items);
-
-            if (empty($preparedItems)) {
+            if (empty($items)) {
                 return response()->json([
-                    'error' => 'No valid prediction items were found. Provide the full feature set inside items.',
+                    'error' => 'No valid prediction items were found.',
                 ], 400);
             }
 
-            $response = Http::acceptJson()->timeout(10)->post(env('AI_PREDICTOR_URL'), [
-                'items' => $preparedItems,
+            $testPayload = [
+                'items' => $items,
+                'skills_difficulty' => $payload['skills_difficulty'] ?? [],
+            ];
+
+            $response = Http::acceptJson()->timeout(10)->post($this->aiPredictorUrl(), [
+                'items' => $items,
+                'skills_difficulty' => $payload['skills_difficulty'] ?? [],
             ]);
 
             if ($response->successful()) {
                 $responseData = $response->json();
 
-                // Save each prediction from the batch to the database tables.
-                // $savedCount = 0;
-                // if (!empty($responseData['data']) && is_array($responseData['data'])) {
-                //     foreach ($responseData['data'] as $predictionResult) {
-                //         // Find the corresponding request item to get all features.
-                //         $requestItem = $this->findMatchingRequestItem($preparedItems, $predictionResult);
-
-                //         if ($requestItem) {
-                //             $userId = $predictionResult['user_id'] ?? $requestItem['user_id'] ?? null;
-                //             $subtopicId = $predictionResult['skill_id'] ?? $requestItem['skill_id'] ?? null;
-
-                //             if ($userId && $subtopicId) {
-                //                 $saveData = [
-                //                     'decayed_mastery' => $requestItem['decayed_mastery'] ?? 0.0,
-                //                     'skill_difficulty_avg' => $requestItem['skill_difficulty_avg'] ?? 0.0,
-                //                     'student_skill_history' => $requestItem['student_skill_history'] ?? 0.0,
-                //                     'user_success_rate' => $requestItem['user_success_rate'] ?? 0.0,
-                //                     'weighted_streak' => $requestItem['weighted_streak'] ?? 0.0,
-                //                     'consecutive_correct' => $requestItem['consecutive_correct'] ?? 0,
-                //                     'opportunity_count' => $requestItem['opportunity_count'] ?? 0,
-                //                     'learning_momentum' => $requestItem['learning_momentum'] ?? 0.0,
-                //                     'weighted_consistency' => $requestItem['weighted_consistency'] ?? 0.0,
-                //                     'total_experience_score' => $requestItem['total_experience_score'] ?? 0.0,
-                //                     'complexity_gap' => $requestItem['complexity_gap'] ?? 0.0,
-                //                     'mastery_history_gap' => $requestItem['mastery_history_gap'] ?? 0.0,
-                //                     'performance_efficiency' => $requestItem['performance_efficiency'] ?? 0.0,
-                //                     'consistency_success_sync' => $requestItem['consistency_success_sync'] ?? 0.0,
-                //                     'prediction_probability' => $predictionResult['prob'] ?? null,
-                //                     'prediction_status' => $predictionResult['status'] ?? null,
-                //                 ];
-
-                //                 // Save to AiPrediction table
-                //                 AiPrediction::updateOrCreate(
-                //                     [
-                //                         'user_id' => $userId,
-                //                         'subtopic_id' => $subtopicId,
-                //                     ],
-                //                     $saveData
-                //                 );
-
-                //                 // Save to StudentSubtopicState table
-                //                 StudentSubtopicState::updateOrCreate(
-                //                     [
-                //                         'user_id' => $userId,
-                //                         'subtopic_id' => $subtopicId,
-                //                     ],
-                //                     $saveData
-                //                 );
-
-                //                 $savedCount++;
-                //             }
-                //         }
-                //     }
-                // }
-
                 return response()->json([
                     'message' => 'Connected to AI successfully!',
-                    // 'saved_predictions' => $savedCount,
+                    'payload' => $testPayload,
                     'ai_response' => $responseData,
                 ], $response->status());
             }
@@ -204,21 +151,105 @@ class StudentController extends Controller
         return [$payload];
     }
 
-    private function findMatchingRequestItem(array $preparedItems, array $predictionResult): ?array
+    private function buildAiTestPayload($userId = null): array
     {
-        $userId = $predictionResult['user_id'] ?? null;
-        $skillId = $predictionResult['skill_id'] ?? null;
+        return [
+            'items' => [
+                ['order_id' => 101, 'skill_id' => 10, 'skill_name' => 'Algebra Basics', 'user_id' => $userId, 'is_correct' => 1],
+                ['order_id' => 102, 'skill_id' => 10, 'skill_name' => 'Algebra Basics', 'user_id' => $userId, 'is_correct' => 0],
+                ['order_id' => 103, 'skill_id' => 10, 'skill_name' => 'Algebra Basics', 'user_id' => $userId, 'is_correct' => 1],
+                ['order_id' => 104, 'skill_id' => 12, 'skill_name' => 'Fractions', 'user_id' => $userId, 'is_correct' => 0],
+                ['order_id' => 105, 'skill_id' => 12, 'skill_name' => 'Fractions', 'user_id' => $userId, 'is_correct' => 1],
+                ['order_id' => 106, 'skill_id' => 15, 'skill_name' => 'Word Problems', 'user_id' => $userId, 'is_correct' => 1],
+                ['order_id' => 107, 'skill_id' => 15, 'skill_name' => 'Word Problems', 'user_id' => $userId, 'is_correct' => 1],
+                ['order_id' => 108, 'skill_id' => 15, 'skill_name' => 'Word Problems', 'user_id' => $userId, 'is_correct' => 0],
+            ],
+            'skills_difficulty' => [
+                10 => 0.35,
+                12 => 0.60,
+                15 => 0.25,
+            ],
+        ];
+    }
 
-        if ($userId === null || $skillId === null) {
+    private function resolveAiTestUserId()
+    {
+        try {
+            return JWTAuth::user()?->id;
+        } catch (\Throwable $e) {
             return null;
         }
+    }
 
-        foreach ($preparedItems as $item) {
-            if (($item['user_id'] ?? null) === $userId && ($item['skill_id'] ?? null) === $skillId) {
-                return $item;
-            }
+    private function aiPredictorUrl(): string
+    {
+        return env('AI_PREDICTOR_URL', 'http://127.0.0.1:5000/predict');
+    }
+
+
+    public function subtopicEvaluation(Quiz $quiz)
+    {
+        $student = JWTAuth::user()->student;
+        $userId = $student->id;
+
+        $quiz_subtopics = $quiz->questions()->pluck('subtopic_id')->unique()->toArray();
+        $subtopics = Subtopic::whereIn('id', $quiz_subtopics)->get(['id', 'title', 'subtopic_difficulty'])->keyBy('id');
+        $student_answers = $student->answers()
+            ->whereIn('subtopic_id', $quiz_subtopics)
+            ->orderBy('id')
+            ->orderBy('subtopic_id')
+            ->get(['id as order_id', 'subtopic_id as skill_id', 'correctness as is_correct']);
+
+        $subtopic_difficulty = $subtopics->pluck('subtopic_difficulty', 'id')->toArray();
+
+        $items = $student_answers->values()->map(function ($answer) use ($subtopics, $userId) {
+            $subtopic = $subtopics->get($answer->skill_id);
+
+            return [
+                'order_id' => $answer->order_id,
+                'skill_id' => $answer->skill_id,
+                'skill_name' => $subtopic?->title,
+                'user_id' => $userId,
+                'is_correct' => $answer->is_correct,
+            ];
+        })->toArray();
+
+        $payload = [
+            'items' => $items,
+            'skills_difficulty' => $subtopic_difficulty,
+        ];
+
+        if (empty($payload['items'])) {
+            return response()->json([
+                'message' => 'No student answers were found for this quiz.',
+                'payload' => $payload,
+            ], 404);
         }
 
-        return null;
+        try {
+            $response = Http::acceptJson()
+                ->timeout(10)
+                ->post($this->aiPredictorUrl(), $payload);
+
+            if ($response->successful()) {
+                return response()->json([
+                    'message' => 'Connected to AI successfully!',
+                    // 'payload' => $payload,
+                    'ai_response' => $response->json(),
+                ], $response->status());
+            }
+
+            return response()->json([
+                'message' => 'Student answers were prepared, but AI returned an error',
+                'payload' => $payload,
+                'details' => $response->json() ?? $response->body(),
+            ], $response->status());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Student answers were prepared, but AI could not be reached',
+                'payload' => $payload,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
