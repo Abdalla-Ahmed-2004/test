@@ -50,7 +50,7 @@ class StudentController extends Controller
                     'attempted_at' => $attempt->created_at->format('Y-m-d H:i:s'),
                 ];
             }) : null,
-            'subtopic_evaluations' => $student->subtopicEvaluations ? $student->subtopicEvaluations : null
+            'subtopic_evaluations' => $student->subtopicEvaluations()->with('subtopic')->get()?? null
 
 
             // You can add more data here as needed, such as recent quiz attempts, recommended lessons, etc.

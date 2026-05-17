@@ -97,7 +97,11 @@ class SubtopicSeeder extends Seeder
 
             if ($lesson) {
                 foreach ($subtopics as $subtopicTitle) {
-                    $lesson->subtopics()->firstOrCreate(['title' => $subtopicTitle]);
+                    // create with a difficulty between 0.1 and 1.0 (two-decimal precision)
+                    $lesson->subtopics()->firstOrCreate(
+                        ['title' => $subtopicTitle],
+                        ['subtopic_difficulty' => mt_rand(10, 100) / 100]
+                    );
                 }
             }
         }

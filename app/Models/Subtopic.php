@@ -25,4 +25,16 @@ class Subtopic extends Model
     {
         return $this->hasMany(Question::class);
     }
+    public function studentEvaluations()
+    {
+        return $this->hasMany(StudentSubtopicEvaluation::class);
+    }
+    protected static function booted()
+    {
+        static::creating(function ($subtopic) {
+            if (is_null($subtopic->subtopic_difficulty)) {
+                $subtopic->subtopic_difficulty = mt_rand() / mt_getrandmax();
+            }
+        });
+    }
 }
