@@ -77,12 +77,13 @@ class StudentAnswerController extends Controller
             'score' => $score,
             'total_marks' => $quiz->total_marks,
         ]);
-       $answers_correctness = $quiz->questions()->get(['id', 'question', 'correct_answer'])->map(function ($question) use ($student) {
+       $answers_correctness = $quiz->questions()->get(['id', 'subtopic_id', 'question', 'correct_answer'])->map(function ($question) use ($student) {
             $answer = StudentAnswer::where('student_id', $student->id)
                 ->where('question_id', $question->id)
                 ->first();
             return [
                 'question_id' => $question->id,
+                'subtopic_id' => $question->subtopic_id,
                 'question' => $question->question,
                 'correct_answer' => $question->correct_answer,
                 'student_answer' => $answer ? $answer->answer_text : null,

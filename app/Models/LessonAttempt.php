@@ -44,4 +44,8 @@ class LessonAttempt extends Model
     {
         return $this->hasMany(StudentAnswer::class, 'lesson_attempt_id');
     }
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class);
+    }
 }

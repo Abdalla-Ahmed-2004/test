@@ -45,8 +45,8 @@ class Student extends Model
         return $this->hasMany(Recommendation::class);
     }
 
-    public function chatSessions()
+    public function subtopicEvaluations()
     {
-        return $this->hasMany(ChatSession::class);
+        return $this->hasMany(StudentSubtopicEvaluation::class);
     }
 }
