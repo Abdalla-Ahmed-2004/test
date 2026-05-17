@@ -13,6 +13,7 @@ class StudentSubtopicEvaluation extends Model
         'student_id',
         'subtopic_id',
         'subtopic_evaluation',
+        'evaluation_status',
         'question_count',
         'correct_count',
     ];

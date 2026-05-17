@@ -46,11 +46,11 @@ class StudentController extends Controller
                     'profile_picture' => $attempt->teacher->user->profile_picture,
                     'score' => $score,
                     'total_marks' => $attempt->quiz_id ? $attempt->quiz->total_marks : null,
-                    'percentage' => $attempt->quiz_id && $total_marks ? round(($score / $total_marks) * 100, 2) : null,
+
                     'attempted_at' => $attempt->created_at->format('Y-m-d H:i:s'),
                 ];
             }) : null,
-            'subtopic_evaluations' => $student->subtopicEvaluations()->with('subtopic')->get()?? null
+            'subtopic_evaluations' => $student->subtopicEvaluations()->with('subtopic')->get() ?? null
 
 
             // You can add more data here as needed, such as recent quiz attempts, recommended lessons, etc.
@@ -310,7 +310,13 @@ class StudentController extends Controller
             // return((int)($response->json()[0]['skill_id']));
 
             if ($response->successful()) {
+                // Log full AI response for debugging (check storage/logs/laravel.log)
+                Log::debug('AI response for subtopicEvaluation', $response->json());
+
                 foreach ($response->json() as $item) {
+                    // Allow multiple key names for status and log each item
+                    $status = $item['status'] ?? $item['evaluation_status'] ?? null;
+                    Log::debug('AI prediction item', $item);
 
                     StudentSubtopicEvaluation::updateOrCreate(
                         [
@@ -319,6 +325,7 @@ class StudentController extends Controller
                         ],
                         [
                             'subtopic_evaluation' =>  round($item['mastery_score']) ?? null,
+                            'evaluation_status' => $status,
                             'question_count' =>  $item['total_attempts'] ?? null,
                             'correct_count' =>   $item['total_correct'] ?? null,
                         ]
@@ -331,6 +338,7 @@ class StudentController extends Controller
                         'subtopic_id' => $evaluation->subtopic_id,
                         'subtopic_title' => $subtopics->get($evaluation->subtopic_id)->title ?? 'Unknown',
                         'subtopic_evaluation' => $evaluation->subtopic_evaluation,
+                        'evaluation_status' => $evaluation->evaluation_status,
                         'question_count' => $evaluation->question_count,
                         'correct_count' => $evaluation->correct_count,
                     ];

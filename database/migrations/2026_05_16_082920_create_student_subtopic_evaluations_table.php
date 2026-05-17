@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('subtopic_id')->constrained()->onDelete('cascade');
             
             $table->float('subtopic_evaluation', 10, 2)->nullable();
+            $table->string('evaluation_status', 50)->nullable();
             $table->integer('question_count')->nullable();
             $table->integer('correct_count')->nullable();
             $table->timestamps();
