@@ -13,6 +13,7 @@ class Video extends Model
     protected $fillable = [
         'teacher_id',
         'lesson_id',
+        'subtopic_id',
         'title',
         'url',
         'duration',
@@ -49,5 +50,9 @@ class Video extends Model
     public function lessonAttempts()
     {
         return $this->hasMany(LessonAttempt::class);
+    }
+    public function subtopic()
+    {
+        return $this->belongsTo(Subtopic::class);
     }
 }

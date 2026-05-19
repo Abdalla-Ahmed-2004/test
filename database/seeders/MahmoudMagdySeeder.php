@@ -4254,6 +4254,7 @@ class MahmoudMagdySeeder extends Seeder
                 [
                     'teacher_id' => $teacher->id,
                     'lesson_id' => $lesson->id,
+                    'subtopic_id' => $blueprint['questions'][0]['subtopic_id'] ?? null,
                 ],
                 [
                     'title' => 'Mahmoud Magdy - ' . $lesson->title,
@@ -4300,6 +4301,13 @@ class MahmoudMagdySeeder extends Seeder
                     $subtopicId = $subtopic->id;
                 }
 
+                $difficultyMap = [
+                    'easy' => 1,
+                    'medium' => 2,
+                    'hard' => 3
+                ];
+                $parsedDifficulty = isset($questionData['difficulty']) ? ($difficultyMap[$questionData['difficulty']] ?? null) : null;
+
                 Question::updateOrCreate(
                     [
                         'quiz_id' => $quiz->id,
@@ -4313,7 +4321,7 @@ class MahmoudMagdySeeder extends Seeder
                         'option_3' => $options[2] ?? '',
                         'option_4' => $options[3] ?? '',
                         'correct_answer' => $questionData['correct_answer'] ?? '',
-                        'difficulty' => $questionData['difficulty'] ?? null,
+                        'difficulty' => $parsedDifficulty,
                         'cognitive_skill' => $questionData['cognitive_skill'] ?? null,
                     ]
                 );

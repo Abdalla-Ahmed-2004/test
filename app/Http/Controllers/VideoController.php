@@ -46,6 +46,7 @@ class VideoController extends Controller
             $video = Video::create([
                 'teacher_id' => $teacher->id,
                 'lesson_id' => $request->input('lesson_id'),
+                'subtopic_id' => $request->input('subtopic_id', null),
                 'title' => $request->input('title'),
                 'url' => $path,
                 'duration' =>$request->input('duration', null),

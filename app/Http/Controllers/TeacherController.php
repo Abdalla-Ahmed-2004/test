@@ -19,6 +19,7 @@ use App\Models\QuizAttempt;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\Video;
+use Illuminate\Support\Facades\Cache;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class TeacherController extends Controller
@@ -44,7 +45,7 @@ class TeacherController extends Controller
         $page = request()->get('page', 1);
         $cacheKey = 'teachers_subject_' . $subject->id . '_page_' . $page;
 
-        $teachers = cache()->remember($cacheKey, 60, function () use ($subject) {
+        $teachers = Cache::remember($cacheKey, 60, function () use ($subject) {
             return $subject->teachers()->paginate(10);
         });
 
@@ -127,40 +128,39 @@ class TeacherController extends Controller
     }
     public function TeacherDashboard()
     {
-        // dd($teacher);
         $teacher = JWTAuth::user()->teacher;
-        $videos_count = $teacher->videos()->count();
-        $quizzes_count = $teacher->quizzes()->count();
-        $teacher = JWTAuth::user()->teacher;
-        $students_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })->select('score')->sum('score');
+        $cacheKey = 'teacher:dashboard:' . $teacher->id;
 
-        // $all_possible_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
-        //     $q->where('teacher_id', $teacher->id);
-        // })->with(['quiz' => function ($query) {
-        //     // This adds a 'questions_count' to each loaded Quiz model
-        //     $query->withCount('questions');
-        // }])->get()->sum('quiz.questions_count');
+        $data = cache()->remember($cacheKey, 900, function () use ($teacher) {
+            $videos_count = $teacher->videos()->count();
+            $quizzes_count = $teacher->quizzes()->count();
 
+            $students_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })->select('score')->sum('score');
 
-        $all_possible_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })->with('quiz')->get()->sum('quiz.total_marks');
-        // return($all_possible_points);
-            $percentage = $quizzes_count > 0 && $all_possible_points > 0 ? round($students_points / $all_possible_points, 2)*100 : 0;
+            $all_possible_points = QuizAttempt::whereHas('quiz', function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })->with('quiz')->get()->sum('quiz.total_marks');
 
+            $percentage = $quizzes_count > 0 && $all_possible_points > 0 ? round($students_points / $all_possible_points, 2) * 100 : 0;
 
+            return [
+                'videos_count' => $videos_count,
+                'quizzes_count' => $quizzes_count,
+                'average_score' => $percentage . '%',
+                'quiz_attempts_count' => $teacher->quizzes()->withCount('quizzesAttempt')->get(),
+                'student_attempts' => $teacher->lessonAttempts()->orderBy('student_id')->get(),
+            ];
+        });
 
-        // $student_attempts =  ($teacher->lessons()->where('lessons.id',"5")->first()->attempts);
         return response()->json([
             'teacher' => (new TeacherResource($teacher)),
-            'videos_count' => $videos_count,
-            'quizzes_count' => $quizzes_count,
-            'average_score' => $percentage . '%',
-            'quiz_attempts_count' => $teacher->quizzes()->withCount('quizzesAttempt')->get(),
-
-            'student_attempts' => new LessonAttemptCollection($teacher->lessonAttempts()->orderBy('student_id')->get()),
+            'videos_count' => $data['videos_count'],
+            'quizzes_count' => $data['quizzes_count'],
+            'average_score' => $data['average_score'],
+            'quiz_attempts_count' => $data['quiz_attempts_count'],
+            'student_attempts' => new LessonAttemptCollection($data['student_attempts']),
         ]);
     }
     /**

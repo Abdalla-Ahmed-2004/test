@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subtopic_id')->nullable()->constrained()->onDelete('set null');
             $table->string('title')->nullable();
             $table->string('url');
             $table->unsignedInteger('duration')->nullable(); // seconds

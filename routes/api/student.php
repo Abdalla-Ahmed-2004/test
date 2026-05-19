@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\QuizAttemptController;
+use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\StudentAnswerController;
 use App\Http\Controllers\StudentController;
 use App\Models\Student;
@@ -12,6 +13,7 @@ Route::middleware('auth:api')->group(function () {
     // Route::get('students/attempts', [QuizAttemptController::class, 'index'])->middleware(['role:student']);
     Route::get('student/dashboard', [StudentController::class, 'index'])->middleware(['role:student'])->scopeBindings();
     Route::get('student/answers/{quiz}', [StudentController::class, 'subtopicEvaluation'])->middleware(['role:student']);
+    Route::get('student/recommendations/subtopics/{subtopic}', [RecommendationController::class, 'recommendations'])->middleware(['role:student']);
     });
 
 Route::match(['get', 'post'], 'aiTest', [StudentController::class, 'aiTest']);

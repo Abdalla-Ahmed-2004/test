@@ -7,29 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Recommendation extends Model
 {
+    /** @use HasFactory<\Database\Factories\RecommendationFactory> */
     use HasFactory;
-
-    protected $fillable = [
-        'student_id',
-        'resource_type',
-        'resource_id',
-        'reason',
-    ];
-
-    public function student()
-    {
-        return $this->belongsTo(Student::class);
-    }
-
-    /**
-     * Resolve the actual resource (Video or Quiz) polymorphically.
-     */
-    public function resource()
-    {
-        return match ($this->resource_type) {
-            'video' => $this->belongsTo(Video::class, 'resource_id'),
-            'quiz' => $this->belongsTo(Quiz::class, 'resource_id'),
-            default => null,
-        };
-    }
 }

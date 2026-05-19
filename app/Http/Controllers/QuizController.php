@@ -10,7 +10,7 @@ use App\Models\Quiz;
 use App\Models\Video;
 use Illuminate\Support\Facades\Gate;
 use Tymon\JWTAuth\Facades\JWTAuth;
-
+use Illuminate\Support\Facades\Cache;
 class QuizController extends Controller
 {
     /**
@@ -22,7 +22,7 @@ class QuizController extends Controller
         $page = request()->get('page', 1);
         $cacheKey = 'quizzes_teacher_' . $teacher->id . '_page_' . $page;
 
-        $quizzes = cache()->remember($cacheKey, 60, function () use ($teacher) {
+        $quizzes = Cache::remember($cacheKey, 60, function () use ($teacher) {
             return $teacher->quizzes()->paginate(10);
         });
 

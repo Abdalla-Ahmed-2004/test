@@ -25,8 +25,9 @@ class StorequizRequest extends FormRequest
             'questions.*.option' => 'required|array',
             'questions.*.correct_answer' => 'required|string',
             'questions.*.subtopic_id' => 'required|integer|exists:subtopics,id',
-            'questions.*.difficulty' => 'nullable|string|max:255',
+            'questions.*.difficulty' => 'nullable|in:1,2,3',
             'questions.*.cognitive_skill' => 'nullable|string',
+            
             
             ];
             

@@ -6,20 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('recommendations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->enum('resource_type', ['video', 'quiz']);
-            $table->unsignedBigInteger('resource_id');
-            $table->string('reason')->nullable(); // e.g. "Weak in Newton's Laws"
             $table->timestamps();
-
-            $table->index(['student_id', 'created_at']);
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('recommendations');

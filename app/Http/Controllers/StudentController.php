@@ -14,6 +14,7 @@ use App\Models\Subtopic;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Services\AIEvaluationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -26,37 +27,43 @@ class StudentController extends Controller
     public function index()
     {
         $student = JWTAuth::user()->student;
-        $lesson_attempts = $student->lessonAttempts()->where('quiz_attempted', true)->orderBy('created_at', 'desc')->get();
+        $cacheKey = 'student:dashboard:' . $student->id;
 
-        return response()->json([
-            'message' => 'Student dashboard data retrieved successfully',
-            'student' => new StudentResource($student),
-            'lesson_attempts_completed_count' => $lesson_attempts->count(),
-            'lesson_attempts' => $student->lessonAttempts ? $student->lessonAttempts->map(function ($attempt) use ($student) {
+        $data = Cache::remember($cacheKey, 900, function () use ($student) {
+            $lesson_attempts = $student->lessonAttempts()->where('quiz_attempted', true)->orderBy('created_at', 'desc')->get();
+
+            $formatted_lessons = $lesson_attempts->map(function ($attempt) use ($student) {
                 $score = $attempt->quiz_id ? $student->quizzesAttempt()->where('quiz_id', $attempt->quiz_id)->value('score') : null;
                 $total_marks = $attempt->quiz_id ? $attempt->quiz->total_marks : null;
                 return [
                     'teacher_id' => $attempt->teacher_id,
                     'lesson_id' => $attempt->lesson_id,
                     'video_id' => $attempt->video_id,
-                    'teacher_name' => $attempt->teacher->user->name ?? 'Unknown Teacher',
-                    'lesson_title' => $attempt->lesson->title,
-                    'video_title' => $attempt->video->title,
+                    'teacher_name' => collect($attempt->teacher->user)->get('name') ?? 'Unknown Teacher',
+                    'lesson_title' => $attempt->lesson->title ?? null,
+                    'video_title' => $attempt->video->title ?? null,
                     'quiz_title' => $attempt->quiz ? $attempt->quiz->title : null,
-                    'profile_picture' => $attempt->teacher->user->profile_picture,
+                    'profile_picture' => collect($attempt->teacher->user)->get('profile_picture'),
                     'score' => $score,
-                    'total_marks' => $attempt->quiz_id ? $attempt->quiz->total_marks : null,
-
+                    'total_marks' => $total_marks,
                     'attempted_at' => $attempt->created_at->format('Y-m-d H:i:s'),
                 ];
-            }) : null,
-            'subtopic_evaluations' => $student->subtopicEvaluations()->with('subtopic')->get() ?? null
+            });
 
+            return [
+                'lesson_attempts_completed_count' => $lesson_attempts->count(),
+                'lesson_attempts' => $formatted_lessons,
+                'subtopic_evaluations' => $student->subtopicEvaluations()->with('subtopic')->get()
+            ];
+        });
 
-            // You can add more data here as needed, such as recent quiz attempts, recommended lessons, etc.
+        return response()->json([
+            'message' => 'Student dashboard data retrieved successfully',
+            'student' => new StudentResource($student),
+            'lesson_attempts_completed_count' => $data['lesson_attempts_completed_count'],
+            'lesson_attempts' => $data['lesson_attempts'],
+            'subtopic_evaluations' => $data['subtopic_evaluations']
         ]);
-        // For now, just return a placeholder response
-
     }
 
     /**
@@ -310,32 +317,32 @@ class StudentController extends Controller
             // return((int)($response->json()[0]['skill_id']));
 
             if ($response->successful()) {
-                // Log full AI response for debugging (check storage/logs/laravel.log)
-                Log::debug('AI response for subtopicEvaluation', $response->json());
+            $evaluation_ids= [];
 
                 foreach ($response->json() as $item) {
                     // Allow multiple key names for status and log each item
                     $status = $item['status'] ?? $item['evaluation_status'] ?? null;
                     Log::debug('AI prediction item', $item);
 
-                    StudentSubtopicEvaluation::updateOrCreate(
+                   $evaluation= StudentSubtopicEvaluation::create(
                         [
                             'student_id' => $userId,
                             'subtopic_id' => $item['skill_id'],
-                        ],
-                        [
+                       
                             'subtopic_evaluation' =>  round($item['mastery_score']) ?? null,
                             'evaluation_status' => $status,
                             'question_count' =>  $item['total_attempts'] ?? null,
                             'correct_count' =>   $item['total_correct'] ?? null,
                         ]
                     );
+                    $evaluation_ids[]=$evaluation->id ?? null;
                 }
 
-                // ✅ إصلاح الـ Bug الثاني: إرجاع المصفوفة مباشرة بدون response()->json()
-                return $student->subtopicEvaluations()->whereIn('subtopic_id', $quiz_subtopics)->get()->map(function ($evaluation) use ($subtopics) {
+                // dd($evaluation_ids);
+                return $student->subtopicEvaluations()->whereIn('subtopic_id', $quiz_subtopics)->whereIn('id', $evaluation_ids)->get()->map(function ($evaluation) use ($subtopics) {
                     return [
                         'subtopic_id' => $evaluation->subtopic_id,
+                        'subtopic_difficulty' => $subtopics->get($evaluation->subtopic_id)->subtopic_difficulty ?? null,
                         'subtopic_title' => $subtopics->get($evaluation->subtopic_id)->title ?? 'Unknown',
                         'subtopic_evaluation' => $evaluation->subtopic_evaluation,
                         'evaluation_status' => $evaluation->evaluation_status,

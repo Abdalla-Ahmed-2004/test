@@ -43,11 +43,14 @@ class SubjectController extends Controller
 
     public function showSubtopics(Subject $subject)
     {
-        return $subject->load([
-            'units:id,title,subject_id',
-            'units.lessons:id,title,unit_id',
-            'units.lessons.subtopics:id,title,lesson_id',
-        ]);
+        $cacheKey = 'subject:tree:' . $subject->id;
+        return cache()->remember($cacheKey, 86400, function () use ($subject) {
+            return $subject->load([
+                'units:id,title,subject_id',
+                'units.lessons:id,title,unit_id',
+                'units.lessons.subtopics:id,title,lesson_id',
+            ]);
+        });
     }
 
     /**

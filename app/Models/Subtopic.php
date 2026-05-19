@@ -29,6 +29,10 @@ class Subtopic extends Model
     {
         return $this->hasMany(StudentSubtopicEvaluation::class);
     }
+    public function videos()
+    {
+        return $this->hasMany(Video::class);
+    }
     protected static function booted()
     {
         static::creating(function ($subtopic) {

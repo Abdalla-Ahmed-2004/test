@@ -29,6 +29,9 @@ class VideoFactory extends Factory
                     $q->where('subject_id', $teacher->subject_id);
                 })->inRandomOrder()->value('id');
             },
+            'subtopic_id' => function (array $attributes) {
+                return \App\Models\Subtopic::where('lesson_id', $attributes['lesson_id'])->inRandomOrder()->value('id');
+            },
             'title' => $this->faker->sentence(),
             'url' => $this->faker->url(),
         ];

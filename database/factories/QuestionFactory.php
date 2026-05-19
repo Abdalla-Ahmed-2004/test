@@ -39,6 +39,7 @@ class QuestionFactory extends Factory
             'option_2' => $this->faker->word(),
             'option_3' => $this->faker->word(),
             'option_4' => $this->faker->word(),
+            'difficulty' => $this->faker->randomElement([1, 2, 3]),
             'correct_answer' => function (array $attributes) {
                 // Pick one of the generated options
                 return $this->faker->randomElement([

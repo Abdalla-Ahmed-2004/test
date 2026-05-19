@@ -18,3 +18,12 @@ require __DIR__ . '/api/public.php';
 require __DIR__ . '/api/teacher.php';
 require __DIR__ . '/api/student.php';
 
+use Illuminate\Support\Facades\Redis;
+
+Route::get('/test-redis', function () {
+    // تخزين قيمة في الريديس
+    Redis::set('user_name', 'Yahya');
+
+    // استرجاع القيمة
+    return Redis::get('user_name');
+});
