@@ -16,17 +16,39 @@ class RecommendationController extends Controller
     public function recommendations(Subtopic $subtopic)
     {
         $student = JWTAuth::user()->student;
-       $subtopic_student_status = $subtopic->studentEvaluations()->where('student_id', $student->id)->latest()->first();
+        $subtopic_student_status = $subtopic->studentEvaluations()->where('student_id', $student->id)->latest()->first();
         $recommendation_videos = $subtopic->videos()->get();
+
         return response()->json([
             'subtopic_status' => $subtopic_student_status ? $subtopic_student_status->evaluation_status : 'not attempted',
             'subtopic_difficulty' => $subtopic->subtopic_difficulty ?? null,
             'subtopic_title' => $subtopic->title,
             'subtopic_evaluation' => $subtopic_student_status ? $subtopic_student_status->subtopic_evaluation : null,
-            'recommendations' => $recommendation_videos
+            'recommendations' => $recommendation_videos,
+
         ]);
     }
+    public function recommendation_questions(Subtopic $subtopic)
+    {
+        $student = JWTAuth::user()->student;
+        $subtopic_student_status = $subtopic->studentEvaluations()->where('student_id', $student->id)->latest()->first();
+        $recommendation_questions = [];
+        switch ($subtopic_student_status->evaluation_status) {
+            case 'Red (weak skill)':
+                $recommendation_questions = $subtopic->questions()->where('difficulty', 1)->inRandomOrder()->limit(30)->get();
+                break;
+            case 'Developing (On Track)':
+                $recommendation_questions = $subtopic->questions()->whereIn('difficulty', [1, 2])->inRandomOrder()->limit(30)->get();
+                break;
+            case 'Green (strong skill)':
+                $recommendation_questions = $subtopic->questions()->whereIn('difficulty', [1, 2, 3])->inRandomOrder()->limit(30)->get();
+                break;
+            default:
+                $recommendation_questions = [];
+        }
 
+        return $recommendation_questions;
+    }
     /**
      * Show the form for creating a new resource.
      */

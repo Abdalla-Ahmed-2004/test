@@ -14,6 +14,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('student/dashboard', [StudentController::class, 'index'])->middleware(['role:student'])->scopeBindings();
     Route::get('student/answers/{quiz}', [StudentController::class, 'subtopicEvaluation'])->middleware(['role:student']);
     Route::get('student/recommendations/subtopics/{subtopic}', [RecommendationController::class, 'recommendations'])->middleware(['role:student']);
+    Route::get('student/recommendations/subtopics/{subtopic}/questions', [RecommendationController::class, 'recommendation_questions'])->middleware(['role:student']);
     });
 
 Route::match(['get', 'post'], 'aiTest', [StudentController::class, 'aiTest']);
