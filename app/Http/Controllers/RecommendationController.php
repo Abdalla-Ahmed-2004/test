@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Recommendation;
 use App\Http\Requests\StoreRecommendationRequest;
 use App\Http\Requests\UpdateRecommendationRequest;
+use App\Models\StudentAnswer;
 use App\Models\Subtopic;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Http;
+use App\Models\StudentSubtopicEvaluation;
 
 class RecommendationController extends Controller
 {
@@ -55,6 +58,104 @@ class RecommendationController extends Controller
             'recommendation_questions' => $recommendation_questions,
 
         ]);
+    }
+
+
+
+    public function answers(Subtopic $subtopic)
+    {
+        $student = JWTAuth::user()->student;
+
+        $answers = request()->input('answers');
+        $results = [];
+
+        // Save submitted answers
+        foreach ($answers as $answer) {
+            $question = $subtopic->questions()->find($answer['id']);
+            if (!$question) {
+                continue; // Skip if question not found in the subtopic
+            }
+            $is_correct = $question->correct_answer == $answer['answer_text'];
+
+            // Log individual answers 
+            $student->answers()->create([
+                'quiz_id' => null,
+                'subtopic_id' => $subtopic->id,
+                'question_id' => $question->id,
+                'answer_text' => $answer['answer_text'] ?? '',
+                'correctness' => $is_correct ? 1 : 0,
+            ]);
+
+            $results[] = [
+                'question_id' => $question->id,
+                'is_correct' => $is_correct
+            ];
+        }
+
+        // Fetch completely updated history for AI
+        $student_answers = $student->answers()
+            ->where('subtopic_id', $subtopic->id)
+            ->orderBy('id', 'asc')
+            ->get(['correctness']);
+
+        // Build Payload for the AI predictor
+        $payload = [
+            [
+                'skill_id' => (string) $subtopic->id,
+                'skill_name' => $subtopic->title ?? 'Unknown',
+                'skill_difficulty_avg' => (float) ($subtopic->subtopic_difficulty ?? 0.5),
+                'student_history' => $student_answers->pluck('correctness')->map(fn($v) => (int)$v)->toArray(),
+            ]
+        ];
+
+        // Ensure we send something if there's history
+        if (empty($payload[0]['student_history'])) {
+            return response()->json([
+                'results' => $results,
+                'message' => 'No history to send to AI.'
+            ]);
+        }
+
+        try {
+            $aiUrl = env('AI_PREDICTOR_URL', 'http://127.0.0.1:5000/predict');
+            $response = Http::acceptJson()->timeout(12)->post($aiUrl, $payload);
+
+            if ($response->successful()) {
+                $evaluations = [];
+                foreach ($response->json() as $item) {
+                    $status = $item['status'] ?? $item['evaluation_status'] ?? null;
+
+                    $evaluation = StudentSubtopicEvaluation::create([
+                        'student_id' => $student->id,
+                        'subtopic_id' => $subtopic->id,
+                        'subtopic_title' => $subtopic->title ?? 'Unknown',
+                        'subtopic_difficulty' => $subtopic->subtopic_difficulty ?? null,
+                        'subtopic_evaluation' => isset($item['mastery_score']) ? round($item['mastery_score']) : null,
+                        'evaluation_status' => $status,
+                        'question_count' => $item['total_attempts'] ?? null,
+                        'correct_count' => $item['total_correct'] ?? null,
+                    ]);
+                    $evaluations[] = $evaluation;
+                }
+
+                return response()->json([
+                    'results' => $results,
+                    'ai_evaluations' => $evaluations
+                ]);
+            }
+
+            return response()->json([
+                'results' => $results,
+                'error' => 'AI returned an error',
+                'details' => $response->json() ?? $response->body()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'results' => $results,
+                'error' => 'AI could not be reached',
+                'message' => $e->getMessage()
+            ]);
+        }
     }
     /**
      * Show the form for creating a new resource.

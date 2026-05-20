@@ -15,6 +15,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('student/answers/{quiz}', [StudentController::class, 'subtopicEvaluation'])->middleware(['role:student']);
     Route::get('student/recommendations/subtopics/{subtopic}', [RecommendationController::class, 'recommendations'])->middleware(['role:student']);
     Route::get('student/recommendations/subtopics/{subtopic}/questions', [RecommendationController::class, 'recommendation_questions'])->middleware(['role:student']);
+    Route::post('student/recommendations/subtopics/{subtopic}/questions/answers', [RecommendationController::class, 'answers'])->middleware(['role:student']);
     });
 
 Route::match(['get', 'post'], 'aiTest', [StudentController::class, 'aiTest']);
