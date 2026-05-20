@@ -47,7 +47,14 @@ class RecommendationController extends Controller
                 $recommendation_questions = [];
         }
 
-        return $recommendation_questions;
+        return response()->json([
+            'subtopic_status' => $subtopic_student_status ? $subtopic_student_status->evaluation_status : 'not attempted',
+            'subtopic_difficulty' => $subtopic->subtopic_difficulty ?? null,
+            'subtopic_title' => $subtopic->title,
+            'subtopic_evaluation' => $subtopic_student_status ? $subtopic_student_status->subtopic_evaluation : null,
+            'recommendation_questions' => $recommendation_questions,
+
+        ]);
     }
     /**
      * Show the form for creating a new resource.

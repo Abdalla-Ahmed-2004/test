@@ -53,7 +53,12 @@ class StudentController extends Controller
             return [
                 'lesson_attempts_completed_count' => $lesson_attempts->count(),
                 'lesson_attempts' => $formatted_lessons,
-                'subtopic_evaluations' => $student->subtopicEvaluations()->with('subtopic')->get()
+                'subtopic_evaluations' => $student->subtopicEvaluations()
+                    ->with('subtopic')
+                    ->latest()
+                    ->get()
+                    ->unique('subtopic_id')
+                    ->values()
             ];
         });
 
